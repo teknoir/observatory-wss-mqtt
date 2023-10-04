@@ -1,4 +1,4 @@
-# Web Socket Server for passing messages to FE apps.
+# Web Socket Server for passing messages from MQTT to FE applications.
 
 ## Getting Started
 
@@ -16,4 +16,4 @@ To run the components locally, follow these steps:
    npm run dev
    yarn dev
 ```
-5. WebSocketServer will be available on  [http://localhost:8080](http://localhost:8080)
+5. WebSocketServer will be available on  [ws://localhost:8080](ws://localhost:8080)
