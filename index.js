@@ -36,6 +36,8 @@ wss.on('connection', function connection(ws) {
   }));
 });
 
+// ====================== TESTING ======================
+
 // To test WS sending messages with interval:
 // setInterval(() => {
 //   console.log('---WS subscribers.length---', subscribers.size);
@@ -60,10 +62,11 @@ const getMessage = () => ({
 
 // To test WS sending messages with camera updates:
 setInterval(() => {
-  console.log('---WS subscribers.length---', subscribers.size);
+  const message = getMessage();
+  console.log('---WS subscribers.length---', subscribers.size, message);
   sendToSubscribers(
     {
-      message: getMessage()
+      message
     }
   )
 }, 3000);
