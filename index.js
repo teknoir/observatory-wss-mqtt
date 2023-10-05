@@ -31,13 +31,39 @@ wss.on('connection', function connection(ws) {
     subscribers.delete(ws.ID);
   });
 
-  ws.send('connected');
+  ws.send(JSON.stringify({
+    status: 'connected WSS-MQTT'
+  }));
 });
 
-// To test WS sending messages:
+// To test WS sending messages with interval:
 // setInterval(() => {
 //   console.log('---WS subscribers.length---', subscribers.size);
 //   sendToSubscribers({
 //     value: Math.floor(Math.random() * 100) + 1
 //   })
 // }, 3000);
+
+const getRandomId = (maxVal = 10) => Math.floor(Math.random() * maxVal) + 1
+
+const getCameraId = () => `${getRandomId()}`;
+
+const getMessage = () => ({
+  image: 'https://picsum.photos/400/300?random&t=' + new Date().getTime(),
+  peripheral: {
+    type: "camera",
+    // name: self.camera_name,
+    id: getCameraId()
+  },
+  detections: []
+})
+
+// To test WS sending messages with camera updates:
+setInterval(() => {
+  console.log('---WS subscribers.length---', subscribers.size);
+  sendToSubscribers(
+    {
+      message: getMessage()
+    }
+  )
+}, 3000);
