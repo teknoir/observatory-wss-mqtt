@@ -12,4 +12,4 @@ class WsMessageService {
   }
 }
 
-export default WsMessageService;
+module.exports = WsMessageService;

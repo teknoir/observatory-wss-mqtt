@@ -10,11 +10,19 @@ class DeviceService {
     this.activityIntervalId = null;
   }
 
+  track(data) {
+    const { message } = data;
+    // TODO: use correct timestamp value
+    this.devices.set(message.peripheral.id, Date.now());
+    // this.devices.set(message.peripheral.id, message.timestamp);
+  }
+
   isCheckActivity() {
     return !!this.activityIntervalId;
   }
 
   checkActivity() {
+    console.log('------------checkActivity', this.devices)
     if (!this.devices.size) {
       return this.stopCheckActivity();
     }
@@ -32,6 +40,7 @@ class DeviceService {
 
   startCheckActivity() {
     if (!this.activityIntervalId) {
+      this.checkActivity();
       this.activityIntervalId = setInterval(() => {
         this.checkActivity();
       }, CHECK_ACTIVE_INTERVAL);
