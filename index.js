@@ -1,5 +1,6 @@
 const { WebSocketServer } = require('ws');
 const MQTTServiceClass = require("./mqttService");
+const DeviceServiceClass = require("./deviceService");
 const { getUniqueID } = require("./utils");
 
 const wss = new WebSocketServer({ port: process.env.WSS_PORT || 8080 });
@@ -13,8 +14,17 @@ const sendToSubscribers = (message) => {
   })
 };
 
+const DeviceService = new DeviceServiceClass(sendToSubscribers);
+
+const sendToSubscribersFromMqtt = (message) => {
+  sendToSubscribers(message);
+  if (!DeviceService.isCheckActivity()) {
+    DeviceService.startCheckActivity();
+  }
+};
+
 const MQTTService = new MQTTServiceClass();
-MQTTService.init(sendToSubscribers);
+MQTTService.init(sendToSubscribersFromMqtt);
 
 wss.on('connection', function connection(ws) {
   ws.ID = getUniqueID();
@@ -29,6 +39,9 @@ wss.on('connection', function connection(ws) {
   ws.on('close', function() {
     console.log('connection closed');
     subscribers.delete(ws.ID);
+    if (subscribers.size === 0) {
+      DeviceService.stopCheckActivity();
+    }
   });
 
   ws.send(JSON.stringify({
@@ -41,7 +54,7 @@ wss.on('connection', function connection(ws) {
 // To test WS sending messages with interval:
 // setInterval(() => {
 //   console.log('---WS subscribers.length---', subscribers.size);
-//   sendToSubscribers({
+//   sendToSubscribersFromMqtt({
 //     value: Math.floor(Math.random() * 100) + 1
 //   })
 // }, 3000);
@@ -64,7 +77,7 @@ const getMessage = () => ({
 setInterval(() => {
   const message = getMessage();
   console.log('---WS subscribers.length---', subscribers.size, message);
-  sendToSubscribers(
+  sendToSubscribersFromMqtt(
     {
       message
     }
