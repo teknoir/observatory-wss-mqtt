@@ -1,6 +1,7 @@
 const { WebSocketServer } = require('ws');
-const MQTTServiceClass = require("./mqttService");
+const { MQTTServiceClass } = require("./mqttService");
 const DeviceServiceClass = require("./deviceService");
+const { TYPES } = require("./wsMessageService");
 const { getUniqueID } = require("./utils");
 
 const wss = new WebSocketServer({ port: process.env.WSS_PORT || 8080 });
@@ -34,8 +35,15 @@ wss.on('connection', function connection(ws) {
 
   ws.on('error', console.error);
 
-  ws.on('message', function message(data) {
-    console.log('received: %s', data);
+  ws.on('message', function message(dataRaw) {
+    console.log('WS received: ', dataRaw);
+    const data = JSON.parse(dataRaw);
+    switch (data.type) {
+      case TYPES.START_IMAGES_STREAM:
+        // TODO: replace two lines below (TEST mode used now)
+        // MQTTService.playFrontEndVideo(data.cameraId);
+        MQTTService.playFrontEndVideoTest(data.cameraId);
+    }
   });
 
   ws.on('close', function() {

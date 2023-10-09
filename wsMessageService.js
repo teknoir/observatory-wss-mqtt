@@ -1,5 +1,6 @@
 const TYPES = {
   INACTIVE: 'INACTIVE',
+  START_IMAGES_STREAM: 'START_IMAGES_STREAM',
 }
 class WsMessageService {
   static getInactiveDevices(ids) {
@@ -12,4 +13,7 @@ class WsMessageService {
   }
 }
 
-module.exports = WsMessageService;
+module.exports = {
+  WsMessageService,
+  TYPES
+}

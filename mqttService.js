@@ -1,4 +1,5 @@
 const mqtt = require("mqtt");
+const { timer } = require('./utils');
 
 const MQTT_HOST = process.env.MQTT_HOST || '127.0.0.1';
 const MQTT_PORT = process.env.MQTT_PORT || 1883;
@@ -6,11 +7,14 @@ const brokerUrl = `mqtt://${MQTT_HOST}:${MQTT_PORT}`;
 // const brokerUrl = `mqtt://test.mosquitto.org`;
 // TODO: it may be changed
 const TOPIC = '/devices/orin-demo-se/events';
+const TOPIC_VIDEO = '/devices/orin-demo-se/commands/devstudio';
 
 class MQTTService {
   constructor() {
     this.client = null;
     this.sendFn = null;
+    // TODO: remove next line
+    this.maxDevicesTest = 10;
   }
 
   init(sendFn) {
@@ -42,10 +46,17 @@ class MQTTService {
   }
 
   publish(topic, message) {
+    console.log('------PUBLISH MQTT----', topic, message)
     this.client.publish(topic, message);
   }
 
-  // for testing purposes
+  playFrontEndVideo(deviceId) {
+    this.publish(TOPIC_VIDEO, JSON.stringify({
+      "front-end-video": deviceId
+    }));
+  }
+
+  // TODO: All lines below for testing purposes, they might be removed in future
   runTest() {
     this.test();
     const testId = setInterval(() => {
@@ -53,29 +64,44 @@ class MQTTService {
     }, 20000);
   }
 
-  async test() {
-    const maxDevices = 10;
-    const timer = ms => new Promise(res => setTimeout(res, ms))
-    const getRandomId = (maxVal = maxDevices) => Math.floor(Math.random() * maxVal) + 1
+  getMessage (id) {
+    const getRandomId = (maxVal = this.maxDevicesTest) => Math.floor(Math.random() * maxVal) + 1
     const getCameraId = () => `${getRandomId()}`;
-
-    const getMessage = () => ({
+    return {
       image: 'https://picsum.photos/400/300?random&t=' + new Date().getTime(),
       peripheral: {
         type: "camera",
         // name: self.camera_name,
-        id: getCameraId()
+        id: id || getCameraId()
       },
       detections: []
-    })
+    }
+  }
 
-    for (let i = 0; i < maxDevices; i++) {
+  async test() {
+    for (let i = 0; i < this.maxDevicesTest; i++) {
       console.log('---PUBLISH---', i);
-      const message = getMessage();
+      const message = this.getMessage();
       this.sendFn({ message });
       await timer(1000);
     }
   }
+
+  // Imitation a video playing on front-end, like 5 image per second, during 6 seconds
+  async playFrontEndVideoTest(deviceId) {
+    let isShow = true
+    const timerId = setTimeout(() => {
+      isShow = false;
+    }, 6000)
+    while(isShow) {
+      const message = this.getMessage(deviceId);
+      this.sendFn({ message });
+      await timer(200);
+    }
+  }
 }
 
-module.exports = MQTTService;
+module.exports = {
+  MQTTServiceClass: MQTTService,
+  TOPIC
+}

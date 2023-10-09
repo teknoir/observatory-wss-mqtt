@@ -6,6 +6,9 @@ const getUniqueID = function () {
   return s4() + s4() + '-' + s4();
 };
 
+const timer = ms => new Promise(res => setTimeout(res, ms))
+
 module.exports = {
-  getUniqueID
+  getUniqueID,
+  timer
 }

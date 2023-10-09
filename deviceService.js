@@ -1,4 +1,4 @@
-const WsMessageService = require('./wsMessageService');
+const { WsMessageService } = require('./wsMessageService');
 
 const CHECK_ACTIVE_INTERVAL = process.env.CHECK_ACTIVE_INTERVAL || 10 * 1000;
 const ACTIVE_INTERVAL = process.env.TIME_INTERVAL || 60 * 1000;
