@@ -17,3 +17,23 @@ To run the components locally, follow these steps:
    yarn dev
 ```
 5. WebSocketServer will be available on  [ws://localhost:8080](ws://localhost:8080)
+
+
+## Build an image & deploy to DEV environment manually
+
+Run the following command from the root of the repo:
+
+> The only params that can be modified are **SHORT_SHA** and **BRANCH_NAME**. Usually these would be filled in by the build trigger, but this is a manual build and in this context they just tag the image. 
+
+```
+gcloud --project=teknoir-mgmt builds submit . \
+--config=cloudbuild.yaml \
+--timeout=3600 \
+--substitutions=\
+_DEPLOY_TO_GKE_DEV="true",\
+SHORT_SHA="0.0.1",\
+BRANCH_NAME="dev",\
+_CLOUDSDK_COMPUTE_ZONE="us-central1-c",\
+_CLOUDSDK_CONTAINER_CLUSTER="teknoir-poc",\
+_TARGET_CLUSTER_NAME="teknoir-dev-cluster"
+```

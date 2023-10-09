@@ -1,0 +1,38 @@
+options:
+  substitutionOption: ALLOW_LOOSE
+substitutions:
+  _NODE_VERSION: "18"
+  _NAMESPACE: gcr.io
+  _DEPLOY_TO_GKE_DEV: "false"
+
+steps:
+  # - id: RUN-TESTS
+  #   name: 'node:$_NODE_VERSION-slim'
+  #   entrypoint: 'npm'
+  #   args: ['test']
+
+  - id: BUILD-IMAGE
+    name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - -c
+      - |
+        set -eo pipefail
+        docker buildx build . \
+          --push \
+          --build-arg NODE_VERSION=$_NODE_VERSION \
+          --tag us-docker.pkg.dev/teknoir/$_NAMESPACE/wss-mqtt:${BRANCH_NAME}-${SHORT_SHA}
+    waitFor: [ '-' ]
+
+  - id: 'DEPLOYMENT'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    env: 
+      - '_DEPLOY_TO_GKE_DEV=${_DEPLOY_TO_GKE_DEV}'
+      - 'SHORT_SHA=${SHORT_SHA}'
+      - 'BRANCH_NAME=${BRANCH_NAME}'
+      - 'CLOUDSDK_COMPUTE_ZONE=${_CLOUDSDK_COMPUTE_ZONE}'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=${_CLOUDSDK_CONTAINER_CLUSTER}'
+      - 'TARGET_CLUSTER_NAME=${_TARGET_CLUSTER_NAME}'      
+    args: ['tools/_deploy_to_gke.sh']
+    waitFor: [ 'BUILD-IMAGE' ]
