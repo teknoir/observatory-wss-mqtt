@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/teknoir/wss-mqtt#readme",
   "dependencies": {
+    "dotenv": "^16.3.1",
     "mqtt": "^5.1.0",
     "ws": "^8.14.2"
   },

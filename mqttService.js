@@ -1,10 +1,10 @@
 const mqtt = require("mqtt");
 const { timer } = require('./utils');
 
-const MQTT_HOST = process.env.MQTT_HOST || '127.0.0.1';
-const MQTT_PORT = process.env.MQTT_PORT || 1883;
-const MQTT_USER = process.env.MQTT_USER || '';
-const MQTT_PASS = process.env.MQTT_PASS || '';
+const MQTT_HOST = process.env.MQTT_HOST;
+const MQTT_PORT = process.env.MQTT_PORT;
+const MQTT_USER = process.env.MQTT_USER;
+const MQTT_PASS = process.env.MQTT_PASS;
 const brokerUrl = `mqtt://${MQTT_HOST}:${MQTT_PORT}`;
 const TOPIC = '/devices/orin-demo-se/events';
 const TOPIC_VIDEO = 'front-end-video';

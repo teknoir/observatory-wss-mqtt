@@ -1,10 +1,11 @@
+require('dotenv').config();
 const { WebSocketServer } = require('ws');
 const { MQTTServiceClass } = require("./mqttService");
 const DeviceServiceClass = require("./deviceService");
 const { TYPES, WsMessageService} = require("./wsMessageService");
 const { getUniqueID } = require("./utils");
 
-const wss = new WebSocketServer({ port: process.env.WSS_PORT || 8080 });
+const wss = new WebSocketServer({ port: process.env.WSS_PORT });
 
 const subscribers = new Map();
 
