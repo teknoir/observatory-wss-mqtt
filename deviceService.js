@@ -11,10 +11,12 @@ class DeviceService {
   }
 
   track(data) {
-    const { message } = data;
+    const peripheralId = data?.event?.peripheral_id;
     // TODO: use correct timestamp value
-    this.devices.set(message.peripheral.id, Date.now());
-    // this.devices.set(message.peripheral.id, message.timestamp);
+    if (peripheralId) {
+      this.devices.set(peripheralId, Date.now());
+      // this.devices.set(message.peripheral.id, message.timestamp);
+    }
   }
 
   isCheckActivity() {

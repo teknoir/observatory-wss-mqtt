@@ -44,8 +44,9 @@ wss.on('connection', function connection(ws) {
     switch (data.type) {
       case TYPES.START_IMAGES_STREAM:
         // TODO: replace two lines below (TEST mode used now)
-        // MQTTService.playFrontEndVideo(data.cameraId);
-        MQTTService.playFrontEndVideoTest(data.cameraId);
+        console.log('data.cameraId', data.cameraId)
+        MQTTService.playFrontEndVideo(data.cameraId);
+        // MQTTService.playFrontEndVideoTest(data.cameraId);
     }
   });
 
@@ -63,7 +64,7 @@ wss.on('connection', function connection(ws) {
 });
 
 // ====================== TESTING ======================
-MQTTService.runTest();
+// MQTTService.runTest();
 
 // To test removing cameras on FE side
 // setInterval(() => {

@@ -3,11 +3,11 @@ const { timer } = require('./utils');
 
 const MQTT_HOST = process.env.MQTT_HOST || '127.0.0.1';
 const MQTT_PORT = process.env.MQTT_PORT || 1883;
+const MQTT_USER = process.env.MQTT_USER || '';
+const MQTT_PASS = process.env.MQTT_PASS || '';
 const brokerUrl = `mqtt://${MQTT_HOST}:${MQTT_PORT}`;
-// const brokerUrl = `mqtt://test.mosquitto.org`;
-// TODO: it may be changed
 const TOPIC = '/devices/orin-demo-se/events';
-const TOPIC_VIDEO = '/devices/orin-demo-se/commands/devstudio';
+const TOPIC_VIDEO = 'front-end-video';
 
 class MQTTService {
   constructor() {
@@ -19,9 +19,11 @@ class MQTTService {
 
   init(sendFn) {
     this.sendFn = sendFn;
-    this.client = mqtt.connect(brokerUrl);
+    this.client = mqtt.connect(brokerUrl, {
+      username: MQTT_USER,
+      password: MQTT_PASS
+    });
     this.client.on("connect", () => {
-      // this.subscribe("presence");
       this.subscribe(TOPIC);
     })
     this.client.on("message", this.onMessage.bind(this));
@@ -29,20 +31,19 @@ class MQTTService {
 
   subscribe(topic) {
     this.client.subscribe(topic, (err) => {
-      if (!err) {
-        this.client.publish(topic, `Hello mqtt - ${topic}`);
-      } else {
+      if (err) {
         console.log('err', err)
       }
     });
   }
 
-  onMessage(topic, message) {
-    console.log('------MESSAGE MQTT----', topic, message.toString());
-    if (this.sendFn) {
+  onMessage(topic, bufferMessage) {
+    console.log('------MESSAGE MQTT----', topic);
+    const messageStr = bufferMessage.toString();
+    const message = JSON.parse(messageStr);
+    if (this.sendFn && message?.event?.topic === TOPIC_VIDEO) {
       this.sendFn(message);
     }
-    this.client.end();
   }
 
   publish(topic, message) {
