@@ -18,6 +18,11 @@ To run the components locally, follow these steps:
 ```
 5. WebSocketServer will be available on  [ws://localhost:8080](ws://localhost:8080)
 
+## Triggers
+
+> The following triggers are configured in GCP:
+> - push to (main|dev) branch to build and deploy to the corresponding environments
+> - push to any branch to build an image and push to GCR
 
 ## Build an image & deploy to DEV environment manually
 
@@ -31,7 +36,7 @@ gcloud --project=teknoir-mgmt builds submit . \
 --timeout=3600 \
 --substitutions=\
 _DEPLOY_TO_GKE_DEV="true",\
-SHORT_SHA="0.0.1",\
+SHORT_SHA="test",\
 BRANCH_NAME="dev",\
 _CLOUDSDK_COMPUTE_ZONE="us-central1-c",\
 _CLOUDSDK_CONTAINER_CLUSTER="teknoir-poc",\
