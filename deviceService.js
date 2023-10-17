@@ -11,7 +11,7 @@ class DeviceService {
   }
 
   track(data) {
-    const peripheralId = data?.event?.peripheral_id;
+    const peripheralId = data?.event?.peripheral?.id;
     // TODO: use correct timestamp value
     if (peripheralId) {
       this.devices.set(peripheralId, Date.now());
@@ -33,6 +33,7 @@ class DeviceService {
     this.devices.forEach((value, key) => {
       if (currentTime - value > ACTIVE_INTERVAL) {
         ids.push(key);
+        this.devices.delete(key);
       }
     });
     if (ids.length > 0) {
@@ -52,6 +53,7 @@ class DeviceService {
   stopCheckActivity() {
     if (this.activityIntervalId) {
       clearInterval(this.activityIntervalId);
+      this.activityIntervalId = null;
     }
   }
 }
