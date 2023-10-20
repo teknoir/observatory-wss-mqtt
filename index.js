@@ -1,20 +1,35 @@
 require('dotenv').config();
+const { createServer } = require('https');
+const { readFileSync } = require('fs');
 const { WebSocketServer } = require('ws');
 const { MQTTServiceClass } = require("./mqttService");
 const DeviceServiceClass = require("./deviceService");
 const { TYPES, WsMessageService} = require("./wsMessageService");
 const { getUniqueID } = require("./utils");
 
+console.log('---->>process.env.NODE_ENV', process.env.NODE_ENV)
 console.log('---->>process.env.WSS_PORT', process.env.WSS_PORT)
-
 console.log('---->>process.env.MQTT_HOST', process.env.MQTT_HOST)
 console.log('---->>process.env.MQTT_PORT', process.env.MQTT_PORT)
 console.log('---->>process.env.MQTT_USER', process.env.MQTT_USER)
 console.log('---->>process.env.MQTT_PASS', process.env.MQTT_PASS)
-
 console.log('---->>process.env.TIME_INTERVAL', process.env.TIME_INTERVAL)
 
-const wss = new WebSocketServer({ port: process.env.WSS_PORT });
+
+const server = createServer({
+  cert: readFileSync('./cert/cert.pem'),
+  key: readFileSync('./cert/key.pem'),
+});
+
+const options = {
+  port: process.env.WSS_PORT
+}
+
+if (process.env.NODE_ENV !== 'development') {
+  options.server = server;
+}
+
+const wss = new WebSocketServer(options);
 
 const subscribers = new Map();
 
