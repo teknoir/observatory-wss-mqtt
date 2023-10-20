@@ -15,18 +15,15 @@ console.log('---->>process.env.MQTT_USER', process.env.MQTT_USER)
 console.log('---->>process.env.MQTT_PASS', process.env.MQTT_PASS)
 console.log('---->>process.env.TIME_INTERVAL', process.env.TIME_INTERVAL)
 
-
-const server = createServer({
-  cert: readFileSync('./cert/cert.pem'),
-  key: readFileSync('./cert/key.pem'),
-});
-
 const options = {
   port: process.env.WSS_PORT
 }
 
 if (process.env.NODE_ENV !== 'development') {
-  options.server = server;
+  options.server = createServer({
+    cert: readFileSync('./cert/cert.pem'),
+    key: readFileSync('./cert/key.pem'),
+  });
 }
 
 const wss = new WebSocketServer(options);
