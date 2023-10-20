@@ -16,7 +16,7 @@ console.log('---->>process.env.MQTT_PASS', process.env.MQTT_PASS)
 console.log('---->>process.env.TIME_INTERVAL', process.env.TIME_INTERVAL)
 
 const options = {
-  port: process.env.WSS_PORT
+  // port: process.env.WSS_PORT
 }
 
 if (process.env.NODE_ENV !== 'development') {
