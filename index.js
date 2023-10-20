@@ -64,6 +64,8 @@ wss.on('connection', function connection(ws) {
   }));
 });
 
+console.log('COMMIT 48c8b838da8ff0b1156aba61eed9db0cb1196b79, build 20.10')
+
 // ====================== TESTING ======================
 // MQTTService.runTest();
 
