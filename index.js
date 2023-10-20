@@ -5,6 +5,8 @@ const DeviceServiceClass = require("./deviceService");
 const { TYPES, WsMessageService} = require("./wsMessageService");
 const { getUniqueID } = require("./utils");
 
+console.log('process.env', process.env)
+
 const wss = new WebSocketServer({ port: process.env.WSS_PORT });
 
 const subscribers = new Map();
