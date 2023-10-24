@@ -17,14 +17,16 @@ console.log('---->>process.env.TIME_INTERVAL', process.env.TIME_INTERVAL)
 
 const options = {
   port: process.env.WSS_PORT
+  //port: 8080
 }
 
-if (process.env.NODE_ENV !== 'development') {
-  options.server = createServer({
-    cert: readFileSync('./cert/cert.pem'),
-    key: readFileSync('./cert/key.pem'),
-  });
-}
+// Not needed due to Istio TLS termination
+// if (process.env.NODE_ENV !== 'development') {
+//   options.server = createServer({
+//     cert: readFileSync('./cert/cert.pem'),
+//     key: readFileSync('./cert/key.pem'),
+//   });
+// }
 
 const wss = new WebSocketServer(options);
 
