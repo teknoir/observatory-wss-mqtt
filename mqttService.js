@@ -80,13 +80,16 @@ class MQTTService {
     const getRandomId = (maxVal = this.maxDevicesTest) => Math.floor(Math.random() * maxVal) + 1
     const getCameraId = () => `${getRandomId()}`;
     return {
-      image: 'https://picsum.photos/400/300?random&t=' + new Date().getTime(),
-      peripheral: {
-        type: "camera",
-        // name: self.camera_name,
-        id: id || getCameraId()
-      },
-      detections: []
+      event: {
+        topic: 'front-end-video',
+        image: 'https://picsum.photos/400/300?random&t=' + new Date().getTime(),
+        peripheral: {
+          type: "camera",
+          // name: self.camera_name,
+          id: id || getCameraId()
+        },
+        detections: []
+      }
     }
   }
 
@@ -94,8 +97,8 @@ class MQTTService {
     for (let i = 0; i < this.maxDevicesTest; i++) {
       console.log('---PUBLISH---', i);
       const message = this.getMessage();
-      this.sendFn({ message });
-      await timer(1000);
+      this.sendFn(message);
+      await timer(10000);
     }
   }
 
@@ -107,7 +110,7 @@ class MQTTService {
     }, 6000)
     while(isShow) {
       const message = this.getMessage(deviceId);
-      this.sendFn({ message });
+      this.sendFn(message);
       await timer(200);
     }
   }
