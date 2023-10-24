@@ -61,7 +61,9 @@ wss.on('connection', function connection(ws) {
   ws.ID = getUniqueID();
   subscribers.set(ws.ID, ws);
 
-  ws.on('error', console.error);
+  ws.on('error', function error(err) {
+    console.log('WS error', err);
+  });
 
   ws.on('message', function message(dataRaw) {
     console.log('WS received: ', dataRaw);
@@ -83,6 +85,7 @@ wss.on('connection', function connection(ws) {
     }
   });
 
+  console.log('send: connected WSS-MQTT');
   ws.send(JSON.stringify({
     status: 'connected WSS-MQTT'
   }));

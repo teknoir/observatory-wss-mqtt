@@ -18,22 +18,26 @@ class MQTTService {
   }
 
   init(sendFn) {
-    this.sendFn = sendFn;
     console.log(
       'MQTT credentials:',
       brokerUrl,
       MQTT_USER,
       MQTT_PASS
-    )
-    this.client = mqtt.connect(brokerUrl, {
-      username: MQTT_USER,
-      password: MQTT_PASS
-    });
-    this.client.on("connect", () => {
-      console.log('MQTT connected')
-      this.subscribe(TOPIC);
-    })
-    this.client.on("message", this.onMessage.bind(this));
+    );
+    try {
+      this.sendFn = sendFn;
+      this.client = mqtt.connect(brokerUrl, {
+        username: MQTT_USER,
+        password: MQTT_PASS
+      });
+      this.client.on("connect", () => {
+        console.log('MQTT connected')
+        this.subscribe(TOPIC);
+      })
+      this.client.on("message", this.onMessage.bind(this));
+    } catch (e) {
+      console.log('MQTT error', e);
+    }
   }
 
   subscribe(topic) {
