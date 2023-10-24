@@ -57,6 +57,7 @@ const MQTTService = new MQTTServiceClass();
 MQTTService.init(sendToSubscribersFromMqtt);
 
 wss.on('connection', function connection(ws) {
+  console.log('WS user connection opened');
   ws.ID = getUniqueID();
   subscribers.set(ws.ID, ws);
 
@@ -86,8 +87,6 @@ wss.on('connection', function connection(ws) {
     status: 'connected WSS-MQTT'
   }));
 });
-
-console.log('COMMIT 48c8b838da8ff0b1156aba61eed9db0cb1196b79, build 20.10')
 
 // ====================== TESTING ======================
 // MQTTService.runTest();
