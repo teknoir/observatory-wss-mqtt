@@ -1,18 +1,41 @@
 require('dotenv').config();
+const { createServer } = require('https');
+const { readFileSync } = require('fs');
 const { WebSocketServer } = require('ws');
 const { MQTTServiceClass } = require("./mqttService");
 const DeviceServiceClass = require("./deviceService");
 const { TYPES, WsMessageService} = require("./wsMessageService");
 const { getUniqueID } = require("./utils");
 
-const wss = new WebSocketServer({ port: process.env.WSS_PORT });
+console.log('---->>process.env.NODE_ENV', process.env.NODE_ENV)
+console.log('---->>process.env.WSS_PORT', process.env.WSS_PORT)
+console.log('---->>process.env.MQTT_HOST', process.env.MQTT_HOST)
+console.log('---->>process.env.MQTT_PORT', process.env.MQTT_PORT)
+console.log('---->>process.env.MQTT_USER', process.env.MQTT_USER)
+console.log('---->>process.env.MQTT_PASS', process.env.MQTT_PASS)
+console.log('---->>process.env.TIME_INTERVAL', process.env.TIME_INTERVAL)
+
+const options = {
+  port: process.env.WSS_PORT
+  //port: 8080
+}
+
+// Not needed due to Istio TLS termination
+// if (process.env.NODE_ENV !== 'development') {
+//   options.server = createServer({
+//     cert: readFileSync('./cert/cert.pem'),
+//     key: readFileSync('./cert/key.pem'),
+//   });
+// }
+
+const wss = new WebSocketServer(options);
 
 const subscribers = new Map();
 
 const sendToSubscribers = (data) => {
   const dataStr = JSON.stringify({
+    ...data,
     type: TYPES.MESSAGE,
-    ...data
   });
   console.log('sendToSubscribers', dataStr)
   subscribers.forEach((subscriber) => {
@@ -34,10 +57,13 @@ const MQTTService = new MQTTServiceClass();
 MQTTService.init(sendToSubscribersFromMqtt);
 
 wss.on('connection', function connection(ws) {
+  console.log('WS user connection opened');
   ws.ID = getUniqueID();
   subscribers.set(ws.ID, ws);
 
-  ws.on('error', console.error);
+  ws.on('error', function error(err) {
+    console.log('WS error', err);
+  });
 
   ws.on('message', function message(dataRaw) {
     console.log('WS received: ', dataRaw);
@@ -45,9 +71,9 @@ wss.on('connection', function connection(ws) {
     switch (data.type) {
       case TYPES.START_IMAGES_STREAM:
         // TODO: replace two lines below (TEST mode used now)
-        console.log('data.cameraId', data.cameraId)
-        MQTTService.playFrontEndVideo(data.cameraId);
-        // MQTTService.playFrontEndVideoTest(data.cameraId);
+        console.log('data.cameraId', data.peripheralId)
+        // MQTTService.playFrontEndVideo(data.peripheralId);
+        MQTTService.playFrontEndVideoTest(data.peripheralId);
     }
   });
 
@@ -59,12 +85,11 @@ wss.on('connection', function connection(ws) {
     }
   });
 
+  console.log('send: connected WSS-MQTT');
   ws.send(JSON.stringify({
     status: 'connected WSS-MQTT'
   }));
 });
-
-console.log('COMMIT 48c8b838da8ff0b1156aba61eed9db0cb1196b79, build 20.10')
 
 // ====================== TESTING ======================
 // MQTTService.runTest();
