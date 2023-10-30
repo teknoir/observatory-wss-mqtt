@@ -7,6 +7,7 @@ const MQTT_USER = process.env.MQTT_USER;
 const MQTT_PASS = process.env.MQTT_PASS;
 const brokerUrl = `mqtt://${MQTT_HOST}:${MQTT_PORT}`;
 const TOPIC = '/devices/orin-demo-se/events';
+// const TOPIC = '/devices/orin-demo-se/commands/devstudio';
 const TOPIC_VIDEO = 'front-end-video';
 
 class MQTTService {
@@ -52,7 +53,7 @@ class MQTTService {
     console.log('------MESSAGE MQTT----', topic);
     const messageStr = bufferMessage.toString();
     const message = JSON.parse(messageStr);
-    if (this.sendFn && message?.event?.topic === TOPIC_VIDEO) {
+    if (this.sendFn && message?.topic === TOPIC_VIDEO) {
       this.sendFn(message);
     }
   }
@@ -62,9 +63,9 @@ class MQTTService {
     this.client.publish(topic, message);
   }
 
-  playFrontEndVideo(deviceId) {
+  playFrontEndVideo(peripheralId) {
     this.publish(TOPIC_VIDEO, JSON.stringify({
-      "front-end-video": deviceId
+      "front-end-video": peripheralId
     }));
   }
 
@@ -103,15 +104,15 @@ class MQTTService {
   }
 
   // Imitation a video playing on front-end, like 5 image per second, during 6 seconds
-  async playFrontEndVideoTest(deviceId) {
+  async playFrontEndVideoTest(peripheralId) {
     let isShow = true
     const timerId = setTimeout(() => {
       isShow = false;
-    }, 6000)
+    }, 10000)
     while(isShow) {
-      const message = this.getMessage(deviceId);
+      const message = this.getMessage(peripheralId);
       this.sendFn(message);
-      await timer(200);
+      await timer(500);
     }
   }
 }

@@ -34,8 +34,8 @@ const subscribers = new Map();
 
 const sendToSubscribers = (data) => {
   const dataStr = JSON.stringify({
+    ...data,
     type: TYPES.MESSAGE,
-    ...data
   });
   console.log('sendToSubscribers', dataStr)
   subscribers.forEach((subscriber) => {
@@ -71,9 +71,9 @@ wss.on('connection', function connection(ws) {
     switch (data.type) {
       case TYPES.START_IMAGES_STREAM:
         // TODO: replace two lines below (TEST mode used now)
-        console.log('data.cameraId', data.cameraId)
-        MQTTService.playFrontEndVideo(data.cameraId);
-        // MQTTService.playFrontEndVideoTest(data.cameraId);
+        console.log('data.cameraId', data.peripheralId)
+        // MQTTService.playFrontEndVideo(data.peripheralId);
+        MQTTService.playFrontEndVideoTest(data.peripheralId);
     }
   });
 
