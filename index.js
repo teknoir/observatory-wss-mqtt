@@ -7,14 +7,6 @@ const DeviceServiceClass = require("./deviceService");
 const { TYPES, WsMessageService} = require("./wsMessageService");
 const { getUniqueID } = require("./utils");
 
-console.log('---->>process.env.NODE_ENV', process.env.NODE_ENV)
-console.log('---->>process.env.WSS_PORT', process.env.WSS_PORT)
-console.log('---->>process.env.MQTT_HOST', process.env.MQTT_HOST)
-console.log('---->>process.env.MQTT_PORT', process.env.MQTT_PORT)
-console.log('---->>process.env.MQTT_USER', process.env.MQTT_USER)
-console.log('---->>process.env.MQTT_PASS', process.env.MQTT_PASS)
-console.log('---->>process.env.TIME_INTERVAL', process.env.TIME_INTERVAL)
-
 const options = {
   port: process.env.WSS_PORT
   //port: 8080
@@ -37,7 +29,7 @@ const sendToSubscribers = (data) => {
     ...data,
     type: TYPES.MESSAGE,
   });
-  console.log('sendToSubscribers', dataStr)
+  // console.log('sendToSubscribers')
   subscribers.forEach((subscriber) => {
     subscriber.send(dataStr);
   })
@@ -66,14 +58,13 @@ wss.on('connection', function connection(ws) {
   });
 
   ws.on('message', function message(dataRaw) {
-    console.log('WS received: ', dataRaw);
     const data = JSON.parse(dataRaw);
     switch (data.type) {
       case TYPES.START_IMAGES_STREAM:
-        // TODO: replace two lines below (TEST mode used now)
-        console.log('data.cameraId', data.peripheralId)
-        // MQTTService.playFrontEndVideo(data.peripheralId);
-        MQTTService.playFrontEndVideoTest(data.peripheralId);
+        const { peripheralName, duration } = data;
+        MQTTService.playFrontEndVideo(peripheralName, duration);
+        // TODO: use for testing next line
+        // MQTTService.playFrontEndVideoTest(data.peripheralName);
     }
   });
 
@@ -85,7 +76,6 @@ wss.on('connection', function connection(ws) {
     }
   });
 
-  console.log('send: connected WSS-MQTT');
   ws.send(JSON.stringify({
     status: 'connected WSS-MQTT'
   }));

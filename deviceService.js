@@ -24,7 +24,6 @@ class DeviceService {
   }
 
   checkActivity() {
-    console.log('------------checkActivity', this.devices)
     if (!this.devices.size) {
       return this.stopCheckActivity();
     }
