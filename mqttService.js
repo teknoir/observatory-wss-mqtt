@@ -1,5 +1,5 @@
 const mqtt = require("mqtt");
-const { timer } = require('./utils');
+const { timer, getUniqueID } = require('./utils');
 
 const MQTT_HOST = process.env.MQTT_HOST;
 const MQTT_PORT = process.env.MQTT_PORT;
@@ -9,6 +9,7 @@ const brokerUrl = `mqtt://${MQTT_HOST}:${MQTT_PORT}`;
 const DEVICE = 'orin-demo-se';
 const TOPIC = `/devices/${DEVICE}/events`;
 const TOPIC_VIDEO = 'front-end-video';
+const TOPIC_ALERT = 'front-end-alert';
 const TOPIC_PLAY_VIDEO = `/devices/${DEVICE}/commands/devstudio`;
 
 class MQTTService {
@@ -73,6 +74,33 @@ class MQTTService {
   }
 
   // TODO: All lines below for testing purposes, they might be removed in future
+  runNotificationsTest() {
+    this.testNotification();
+    const testId = setInterval(() => {
+      this.testNotification();
+    }, 10000);
+  }
+
+  testNotification() {
+    const detectionId = getUniqueID();
+    const peripheralId = 'parkinglot1';
+    // const now = (new Date()).toISOString();
+    const startDate = new Date();
+    const endDate = new Date();
+    startDate.setSeconds(startDate.getSeconds() - 30);
+    endDate.setSeconds(endDate.getSeconds() - 15);
+    const message = {
+      topic: TOPIC_ALERT,
+      detection_id: detectionId,
+      peripheral_id: peripheralId,
+      peripheral_name: peripheralId,
+      start_time: startDate.toISOString(),
+      end_time: endDate.toISOString(),
+      is_verified: false
+    }
+    this.sendFn(message);
+  }
+
   runTest() {
     this.test();
     const testId = setInterval(() => {
@@ -84,16 +112,14 @@ class MQTTService {
     const getRandomId = (maxVal = this.maxDevicesTest) => Math.floor(Math.random() * maxVal) + 1
     const getCameraId = () => `${getRandomId()}`;
     return {
-      event: {
-        topic: 'front-end-video',
-        image: 'https://picsum.photos/400/300?random&t=' + new Date().getTime(),
-        peripheral: {
-          type: "camera",
-          // name: self.camera_name,
-          id: id || getCameraId()
-        },
-        detections: []
-      }
+      topic: TOPIC_VIDEO,
+      image: 'https://picsum.photos/400/300?random&t=' + new Date().getTime(),
+      peripheral: {
+        type: "camera",
+        // name: self.camera_name,
+        id: id || getCameraId()
+      },
+      detections: []
     }
   }
 
