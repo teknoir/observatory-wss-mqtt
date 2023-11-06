@@ -78,7 +78,7 @@ class MQTTService {
     this.testNotification();
     const testId = setInterval(() => {
       this.testNotification();
-    }, 10000);
+    }, 20000);
   }
 
   testNotification() {
@@ -91,12 +91,14 @@ class MQTTService {
     endDate.setSeconds(endDate.getSeconds() - 15);
     const message = {
       topic: TOPIC_ALERT,
-      detection_id: detectionId,
-      peripheral_id: peripheralId,
-      peripheral_name: peripheralId,
-      start_time: startDate.toISOString(),
-      end_time: endDate.toISOString(),
-      is_verified: false
+      event: {
+        detection_id: detectionId,
+        peripheral_id: peripheralId,
+        peripheral_name: peripheralId,
+        start_time: startDate.toISOString(),
+        end_time: endDate.toISOString(),
+        is_verified: false
+      }
     }
     this.sendFn(message);
   }
