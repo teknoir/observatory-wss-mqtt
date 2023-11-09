@@ -12,6 +12,20 @@ class WsMessageService {
       }
     }
   }
+
+  static getFrontEndVideo(message) {
+    return {
+      ...message,
+      type: TYPES.MESSAGE,
+    }
+  }
+
+  static getFrontEndAlert(message) {
+    return {
+      ...message,
+      type: TYPES.MESSAGE,
+    }
+  }
 }
 
 module.exports = {

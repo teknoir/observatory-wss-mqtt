@@ -1,5 +1,6 @@
 const mqtt = require("mqtt");
 const { timer, getUniqueID } = require('./utils');
+const { WsMessageService } = require('./wsMessageService');
 
 const MQTT_HOST = process.env.MQTT_HOST;
 const MQTT_PORT = process.env.MQTT_PORT;
@@ -49,7 +50,7 @@ class MQTTService {
     const messageStr = bufferMessage.toString();
     const message = JSON.parse(messageStr);
     if (this.sendFn && message?.topic === TOPIC_VIDEO) {
-      this.sendFn(message);
+      this.sendFn(WsMessageService.getFrontEndVideo(message));
     }
   }
 
@@ -100,7 +101,7 @@ class MQTTService {
         is_verified: false
       }
     }
-    this.sendFn(message);
+    this.sendFn(WsMessageService.getFrontEndAlert(message));
   }
 
   runTest() {
