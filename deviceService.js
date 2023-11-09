@@ -32,7 +32,8 @@ class DeviceService {
     this.devices.forEach((value, key) => {
       if (currentTime - value > ACTIVE_INTERVAL) {
         ids.push(key);
-        this.devices.delete(key);
+        // TODO: not remove inactive devices
+        // this.devices.delete(key);
       }
     });
     if (ids.length > 0) {

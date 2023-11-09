@@ -25,10 +25,7 @@ const wss = new WebSocketServer(options);
 const subscribers = new Map();
 
 const sendToSubscribers = (data) => {
-  const dataStr = JSON.stringify({
-    ...data,
-    type: TYPES.MESSAGE,
-  });
+  const dataStr = JSON.stringify(data);
   // console.log('sendToSubscribers')
   subscribers.forEach((subscriber) => {
     subscriber.send(dataStr);
@@ -88,6 +85,6 @@ MQTTService.runNotificationsTest();
 // To test removing cameras on FE side
 // setInterval(() => {
 //   sendToSubscribers(
-//     WsMessageService.getInactiveDevices(['1','2','3','4','5'])
+//     WsMessageService.getInactiveDevices(['boxerproperty3', 'boxerproperty11'])
 //   )
-// }, 90000)
+// }, 10000)
