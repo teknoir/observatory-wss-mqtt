@@ -2,9 +2,9 @@ require('dotenv').config();
 const { createServer } = require('https');
 const { readFileSync } = require('fs');
 const { WebSocketServer } = require('ws');
-const { MQTTServiceClass } = require("./mqttService");
-const DeviceServiceClass = require("./deviceService");
-const { TYPES, WsMessageService} = require("./wsMessageService");
+const { MQTTServiceClass } = require("./services/mqtt");
+const DeviceServiceClass = require("./services/device");
+const { TYPES, WsMessageService} = require("./services/wsMessage");
 const { getUniqueID } = require("./utils");
 
 const options = {
@@ -58,10 +58,10 @@ wss.on('connection', function connection(ws) {
     const data = JSON.parse(dataRaw);
     switch (data.type) {
       case TYPES.START_IMAGES_STREAM:
-        const { peripheralName, duration } = data;
-        MQTTService.playFrontEndVideo(peripheralName, duration);
+        const { device, peripheralName, duration } = data;
+        MQTTService.playFrontEndVideo({ device, peripheralName, duration });
         // TODO: use for testing next line
-        // MQTTService.playFrontEndVideoTest(data.peripheralName);
+        // MQTTService.playFrontEndVideoTest({ peripheralId: data.peripheralName });
     }
   });
 

@@ -13,10 +13,11 @@ class WsMessageService {
     }
   }
 
-  static getFrontEndVideo(message) {
+  static getFrontEndVideo(device, message) {
     return {
       ...message,
       type: TYPES.MESSAGE,
+      device,
     }
   }
 
