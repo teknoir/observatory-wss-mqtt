@@ -48,7 +48,9 @@ class MQTTService {
     // console.log('------MESSAGE MQTT----', topic);
     const messageStr = bufferMessage.toString();
     const message = JSON.parse(messageStr);
+    const { image, ...rest } = message;
     console.log('------MESSAGE MQTT----', topic, message?.topic);
+    console.log('------MESSAGE MQTT----rest', topic, rest);
     if (this.sendFn && message?.topic === TOPIC_VIDEO) {
       const device = this.getDeviceFromTopic(topic);
       this.sendFn(WsMessageService.getFrontEndVideo(device, message));
