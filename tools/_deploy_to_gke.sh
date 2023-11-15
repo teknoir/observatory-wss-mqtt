@@ -28,6 +28,8 @@ function deploy_to_gke() {
     
     # Trigger a new deployment
     kubectl delete deployment sdmc-wss-mqtt -n ${APP_NAMESPACE}
+
+    rm -rf ${TEMP_FILE}
 }
 
 # Deploy to GKE dev
@@ -42,4 +44,5 @@ if [ "${_DEPLOY_TO_GKE_PROD}" == "true" ]; then
     get_yq
     get_credentials
     deploy_to_gke "teknoir-retail" "teknoir"
+    deploy_to_gke "boxer-property" "teknoir"
 fi
