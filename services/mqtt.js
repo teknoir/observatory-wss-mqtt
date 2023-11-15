@@ -8,10 +8,9 @@ const MQTT_USER = process.env.MQTT_USER;
 const MQTT_PASS = process.env.MQTT_PASS;
 const brokerUrl = `mqtt://${MQTT_HOST}:${MQTT_PORT}`;
 const DEVICE = 'orin-demo-se';
-const TOPIC = `/devices/${DEVICE}/events`;
+const TOPIC = `/devices/+/events`;
 const TOPIC_VIDEO = 'front-end-video';
 const TOPIC_ALERT = 'front-end-alert';
-const TOPIC_PLAY_VIDEO = `/devices/${DEVICE}/commands/devstudio`;
 
 class MQTTService {
   constructor() {
@@ -50,7 +49,8 @@ class MQTTService {
     const messageStr = bufferMessage.toString();
     const message = JSON.parse(messageStr);
     if (this.sendFn && message?.topic === TOPIC_VIDEO) {
-      this.sendFn(WsMessageService.getFrontEndVideo(message));
+      const device = this.getDeviceFromTopic(topic);
+      this.sendFn(WsMessageService.getFrontEndVideo(device, message));
     }
   }
 
@@ -58,8 +58,10 @@ class MQTTService {
     this.client.publish(topic, message);
   }
 
-  playFrontEndVideo(peripheralName, duration = 12, maxFrameRate = 10) {
-    this.publish(TOPIC_PLAY_VIDEO, JSON.stringify({
+  playFrontEndVideo(options) {
+    const { device, peripheralName, duration = 12, maxFrameRate = 10 } = options;
+    const topic = this.getTopicPlayVideo(device);
+    this.publish(topic, JSON.stringify({
       apiVersion: "teknoir.org/v1beta1",
       kind: "UserInteraction",
       metadata: {
@@ -73,6 +75,13 @@ class MQTTService {
       }
     }));
   }
+
+  getDeviceFromTopic(topic) {
+    const res = topic.match(/\/devices\/(?<device>.+)\/events/);
+    return res?.[1];
+  }
+
+  getTopicPlayVideo = device => `/devices/${device}/commands/devstudio`;
 
   // TODO: All lines below for testing purposes, they might be removed in future
   runNotificationsTest() {
@@ -136,7 +145,8 @@ class MQTTService {
   }
 
   // Imitation a video playing on front-end, like 5 image per second, during 6 seconds
-  async playFrontEndVideoTest(peripheralId) {
+  async playFrontEndVideoTest(options) {
+    const { peripheralId } = options;
     let isShow = true
     const timerId = setTimeout(() => {
       isShow = false;
