@@ -1,6 +1,6 @@
 const mqtt = require("mqtt");
-const { timer, getUniqueID } = require('./utils');
-const { WsMessageService } = require('./wsMessageService');
+const { timer, getUniqueID } = require('../utils');
+const { WsMessageService } = require('./wsMessage');
 
 const MQTT_HOST = process.env.MQTT_HOST;
 const MQTT_PORT = process.env.MQTT_PORT;
