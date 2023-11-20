@@ -52,7 +52,7 @@ wss.on('connection', function connection(ws) {
   ws.ID = getUniqueID();
   subscribers.set(ws.ID, ws);
 
-  // Load existing images from the CacheService
+  // Send to clients existing images from the CacheService
   if (CacheService.size() > 0) {
     CacheService.getAll().forEach((message) => {
       ws.send(JSON.stringify(message));
