@@ -16,13 +16,15 @@ class MQTTService {
   constructor() {
     this.client = null;
     this.sendFn = null;
+    this.setCacheFn = null;
     // TODO: remove next line
     this.maxDevicesTest = 10;
   }
 
-  init(sendFn) {
+  init(sendFn, setCacheFn) {
     try {
       this.sendFn = sendFn;
+      this.setCacheFn = setCacheFn;
       this.client = mqtt.connect(brokerUrl, {
         username: MQTT_USER,
         password: MQTT_PASS
@@ -48,10 +50,15 @@ class MQTTService {
     // console.log('------MESSAGE MQTT----', topic);
     const messageStr = bufferMessage.toString();
     const message = JSON.parse(messageStr);
-    const { image, ...rest } = message;
+    const { peripheral } = message;
     if (this.sendFn && message?.topic === TOPIC_VIDEO) {
       const device = this.getDeviceFromTopic(topic);
-      this.sendFn(WsMessageService.getFrontEndVideo(device, message));
+      const peripheralId = peripheral?.id;
+      const frontEndVideoMessage = WsMessageService.getFrontEndVideo(device, message)
+      this.sendFn(frontEndVideoMessage);
+      if (device && peripheralId) {
+        this.setCacheFn(JSON.stringify({ device, peripheralId }), frontEndVideoMessage)
+      }
     }
   }
 
