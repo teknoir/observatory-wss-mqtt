@@ -33,14 +33,14 @@ function deploy_to_gke() {
 }
 
 # Deploy to GKE dev
-if [ "${_DEPLOY_TO_GKE_DEV}" == "true" ]; then
+if [ "${BRANCH_NAME}" == "dev" ]; then
     get_yq
     get_credentials
     deploy_to_gke "demonstrations" "teknoir"
 fi
 
 # Deploy to GKE prod
-if [ "${_DEPLOY_TO_GKE_PROD}" == "true" ]; then
+if [ "${BRANCH_NAME}" == "main" ]; then
     get_yq
     get_credentials
     deploy_to_gke "teknoir-retail" "teknoir"
