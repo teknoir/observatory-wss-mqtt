@@ -3,8 +3,6 @@ options:
 substitutions:
   _NODE_VERSION: "18"
   _NAMESPACE: gcr.io
-  _DEPLOY_TO_GKE_DEV: "false"
-  _DEPLOY_TO_GKE_PROD: "false"
 
 steps:
   # - id: RUN-TESTS
@@ -30,8 +28,6 @@ steps:
     entrypoint: 'bash'
     args: ['tools/_deploy_to_gke.sh']
     env:
-      - '_DEPLOY_TO_GKE_DEV=${_DEPLOY_TO_GKE_DEV}'
-      - '_DEPLOY_TO_GKE_PROD=${_DEPLOY_TO_GKE_PROD}'
       - 'SHORT_SHA=${SHORT_SHA}'
       - 'BRANCH_NAME=${BRANCH_NAME}'
       - 'CLOUDSDK_COMPUTE_ZONE=${_CLOUDSDK_COMPUTE_ZONE}'
