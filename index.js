@@ -89,7 +89,7 @@ wss.on('connection', function connection(ws) {
 
 // ====================== TESTING ======================
 // MQTTService.runTest();
-MQTTService.runNotificationsTest();
+// MQTTService.runNotificationsTest();
 
 // To test removing cameras on FE side
 // setInterval(() => {
