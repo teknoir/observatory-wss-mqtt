@@ -131,22 +131,23 @@ class MQTTService {
   getMessage (id) {
     const getRandomId = (maxVal = this.maxDevicesTest) => Math.floor(Math.random() * maxVal) + 1
     const getCameraId = () => `${getRandomId()}`;
-    return {
+    const message =  {
       topic: TOPIC_VIDEO,
       image: 'https://picsum.photos/400/300?random&t=' + new Date().getTime(),
       peripheral: {
         type: "camera",
-        // name: self.camera_name,
+        name: `camera_${id}`,
         id: id || getCameraId()
       },
       detections: []
     }
+    return WsMessageService.getFrontEndVideo('test-device', message)
   }
 
   async test() {
     for (let i = 0; i < this.maxDevicesTest; i++) {
       console.log('---PUBLISH---', i);
-      const message = this.getMessage();
+      const message = this.getMessage(i + 1);
       this.sendFn(message);
       await timer(10000);
     }
