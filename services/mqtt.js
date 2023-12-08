@@ -7,7 +7,6 @@ const MQTT_PORT = process.env.MQTT_PORT;
 const MQTT_USER = process.env.MQTT_USER;
 const MQTT_PASS = process.env.MQTT_PASS;
 const brokerUrl = `mqtt://${MQTT_HOST}:${MQTT_PORT}`;
-const DEVICE = 'orin-demo-se';
 const TOPIC = `/devices/+/events`;
 const TOPIC_VIDEO = 'front-end-video';
 const TOPIC_ALERT = 'front-end-alert';
@@ -76,7 +75,7 @@ class MQTTService {
         name: "RequestVideo"
       },
       spec: {
-        device: DEVICE,
+        device: device,
         maxFrameRate,
         duration,
         camera: peripheralName
