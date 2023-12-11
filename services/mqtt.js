@@ -66,7 +66,7 @@ class MQTTService {
   }
 
   playFrontEndVideo(options) {
-    const { device, peripheralName, duration = 12, maxFrameRate = 10 } = options;
+    const { device, peripheralId, duration = 12, maxFrameRate = 10 } = options;
     const topic = this.getTopicPlayVideo(device);
     this.publish(topic, JSON.stringify({
       apiVersion: "teknoir.org/v1beta1",
@@ -78,7 +78,7 @@ class MQTTService {
         device: device,
         maxFrameRate,
         duration,
-        camera: peripheralName
+        camera: peripheralId
       }
     }));
   }
