@@ -67,10 +67,10 @@ wss.on('connection', function connection(ws) {
     const data = JSON.parse(dataRaw);
     switch (data.type) {
       case TYPES.START_IMAGES_STREAM:
-        const { device, peripheralName, duration } = data;
-        MQTTService.playFrontEndVideo({ device, peripheralName, duration });
+        const { device, peripheralId, duration } = data;
+        MQTTService.playFrontEndVideo({ device, peripheralId, duration });
         // TODO: use for testing next line
-        // MQTTService.playFrontEndVideoTest({ peripheralId: data.peripheralName });
+        // MQTTService.playFrontEndVideoTest({ peripheralId: data.peripheralId });
     }
   });
 
