@@ -11,7 +11,7 @@ class DeviceService {
   }
 
   track(data) {
-    const peripheralId = data?.event?.peripheral?.id;
+    const peripheralId = data?.peripheral?.id;
     // TODO: use correct timestamp value
     if (peripheralId) {
       this.devices.set(peripheralId, Date.now());
