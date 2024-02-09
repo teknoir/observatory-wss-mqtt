@@ -2,6 +2,7 @@ const TYPES = {
   MESSAGE: 'MESSAGE',
   INACTIVE: 'INACTIVE',
   START_IMAGES_STREAM: 'START_IMAGES_STREAM',
+  START_RAW_IMAGES_STREAM: 'START_RAW_IMAGES_STREAM',
 }
 class WsMessageService {
   static getInactiveDevices(ids) {

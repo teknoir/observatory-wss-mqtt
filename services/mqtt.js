@@ -9,6 +9,7 @@ const MQTT_PASS = process.env.MQTT_PASS;
 const brokerUrl = `mqtt://${MQTT_HOST}:${MQTT_PORT}`;
 const TOPIC = `/devices/+/events`;
 const TOPIC_VIDEO = 'front-end-video';
+const RAW_TOPIC_VIDEO = 'raw-front-end-video';
 const TOPIC_ALERT = 'front-end-alert';
 
 class MQTTService {
@@ -50,7 +51,7 @@ class MQTTService {
     const messageStr = bufferMessage.toString();
     const message = JSON.parse(messageStr);
     const { peripheral } = message;
-    if (this.sendFn && message?.topic === TOPIC_VIDEO) {
+    if (this.sendFn && (message?.topic === TOPIC_VIDEO || message?.topic === RAW_TOPIC_VIDEO)) {
       const device = this.getDeviceFromTopic(topic);
       const peripheralId = peripheral?.id;
       const frontEndVideoMessage = WsMessageService.getFrontEndVideo(device, message)
@@ -78,6 +79,22 @@ class MQTTService {
         device: device,
         maxFrameRate,
         duration,
+        camera: peripheralId
+      }
+    }));
+  }
+
+  playFrontEndRawVideo(options) {
+    const { device, peripheralId } = options;
+    const topic = this.getTopicPlayVideo(device);
+    this.publish(topic, JSON.stringify({
+      apiVersion: "teknoir.org/v1beta1",
+      kind: "UserInteraction",
+      metadata: {
+        name: "RequestRawVideo"
+      },
+      spec: {
+        device: device,
         camera: peripheralId
       }
     }));

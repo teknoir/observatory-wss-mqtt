@@ -71,6 +71,10 @@ wss.on('connection', function connection(ws) {
         MQTTService.playFrontEndVideo({ device, peripheralId, duration });
         // TODO: use for testing next line
         // MQTTService.playFrontEndVideoTest({ peripheralId: data.peripheralId });
+        break;
+      case TYPES.START_RAW_IMAGES_STREAM:
+        MQTTService.playFrontEndRawVideo({ device: data.device, peripheralId: data.peripheralId });
+        break;
     }
   });
 
