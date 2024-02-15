@@ -1,6 +1,7 @@
 const mqtt = require("mqtt");
 const { timer, getUniqueID } = require('../utils');
 const { WsMessageService } = require('./wsMessage');
+const { MqttMessageService } = require("./mqttMessage");
 
 const MQTT_HOST = process.env.MQTT_HOST;
 const MQTT_PORT = process.env.MQTT_PORT;
@@ -51,7 +52,7 @@ class MQTTService {
     const messageStr = bufferMessage.toString();
     const message = JSON.parse(messageStr);
     const { peripheral } = message;
-    if (this.sendFn && (message?.topic === TOPIC_VIDEO || message?.topic === RAW_TOPIC_VIDEO)) {
+    if (this.sendFn && this.isFrontEndVideoTopic(message?.topic)) {
       const device = this.getDeviceFromTopic(topic);
       const peripheralId = peripheral?.id;
       const frontEndVideoMessage = WsMessageService.getFrontEndVideo(device, message)
@@ -69,35 +70,21 @@ class MQTTService {
   playFrontEndVideo(options) {
     const { device, peripheralId, duration = 12, maxFrameRate = 10 } = options;
     const topic = this.getTopicPlayVideo(device);
-    this.publish(topic, JSON.stringify({
-      apiVersion: "teknoir.org/v1beta1",
-      kind: "UserInteraction",
-      metadata: {
-        name: "RequestVideo"
-      },
-      spec: {
-        device: device,
-        maxFrameRate,
-        duration,
-        camera: peripheralId
-      }
-    }));
+    this.publish(topic, JSON.stringify(
+        MqttMessageService.getFrontEndVideo(device, maxFrameRate, duration, peripheralId))
+    );
   }
 
   playFrontEndRawVideo(options) {
-    const { device, peripheralId } = options;
+    const { device, peripheralId, duration = 12, maxFrameRate = 10 } = options;
     const topic = this.getTopicPlayVideo(device);
-    this.publish(topic, JSON.stringify({
-      apiVersion: "teknoir.org/v1beta1",
-      kind: "UserInteraction",
-      metadata: {
-        name: "RequestRawVideo"
-      },
-      spec: {
-        device: device,
-        camera: peripheralId
-      }
-    }));
+    this.publish(topic, JSON.stringify(
+        MqttMessageService.getFrontEndRawVideo(device, maxFrameRate, duration, peripheralId))
+    );
+  }
+
+  isFrontEndVideoTopic(topic) {
+    return topic === TOPIC_VIDEO || topic === RAW_TOPIC_VIDEO;
   }
 
   getDeviceFromTopic(topic) {
