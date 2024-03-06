@@ -46,4 +46,5 @@ if [ "${BRANCH_NAME}" == "main" ]; then
     get_credentials "us-central1-c" "teknoir" "teknoir-cluster"
     deploy_to_gke "teknoir-retail" "teknoir"
     deploy_to_gke "boxer-property" "teknoir"
+    deploy_to_gke "prime-communications" "teknoir"
 fi
