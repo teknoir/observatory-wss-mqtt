@@ -8,7 +8,25 @@ const getUniqueID = function () {
 
 const timer = ms => new Promise(res => setTimeout(res, ms))
 
+function composePeripheralKey(data) {
+  const device = data?.device ?? '';
+  const peripheralId = data?.peripheralId ?? '';
+  return JSON.stringify({ device, peripheralId });
+}
+
+function decomposePeripheralKey(key) {
+  try {
+    const { device, peripheralId } = JSON.parse(key);
+    return { device, peripheralId };
+  } catch (e) {
+    console.error('decomposePeripheralKey error', e);
+    return { device: '', peripheralId: '' };
+  }
+}
+
 module.exports = {
   getUniqueID,
-  timer
+  timer,
+  composePeripheralKey,
+  decomposePeripheralKey 
 }

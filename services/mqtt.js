@@ -1,5 +1,5 @@
 const mqtt = require("mqtt");
-const { timer, getUniqueID } = require('../utils');
+const { timer, getUniqueID, composePeripheralKey } = require('../utils');
 const { WsMessageService } = require('./wsMessage');
 const { MqttMessageService } = require("./mqttMessage");
 
@@ -12,6 +12,9 @@ const TOPIC = `/devices/+/events`;
 const TOPIC_VIDEO = 'front-end-video';
 const RAW_TOPIC_VIDEO = 'raw-front-end-video';
 const TOPIC_ALERT = 'front-end-alert';
+const videoExpiration = 60 * 60; // 1 hour
+const statExpiration = 60 * 60 * 24; // 1 day
+
 
 class MQTTService {
   constructor() {
@@ -26,13 +29,15 @@ class MQTTService {
     try {
       this.sendFn = sendFn;
       this.setCacheFn = setCacheFn;
+      console.log('Connecting to MQTT', brokerUrl);
       this.client = mqtt.connect(brokerUrl, {
         username: MQTT_USER,
         password: MQTT_PASS
       });
       this.client.on("connect", () => {
+        console.log('MQTT connected');
         this.subscribe(TOPIC);
-      })
+      });
       this.client.on("message", this.onMessage.bind(this));
     } catch (e) {
       console.log('MQTT error', e);
@@ -52,13 +57,19 @@ class MQTTService {
     const messageStr = bufferMessage.toString();
     const message = JSON.parse(messageStr);
     const { peripheral } = message;
+    
+    const device = this.getDeviceFromTopic(topic);
+    const peripheralId = peripheral?.id;
+    // caching key if not exists to collect statistics for each device and peripheral
+    if (device && peripheralId) {
+      this.setCacheFn('stat', composePeripheralKey({ device, peripheralId }), { info: peripheral }, statExpiration);
+    }
+
     if (this.sendFn && this.isFrontEndVideoTopic(message?.topic)) {
-      const device = this.getDeviceFromTopic(topic);
-      const peripheralId = peripheral?.id;
       const frontEndVideoMessage = WsMessageService.getFrontEndVideo(device, message)
       this.sendFn(frontEndVideoMessage);
       if (device && peripheralId) {
-        this.setCacheFn(JSON.stringify({ device, peripheralId }), frontEndVideoMessage)
+        this.setCacheFn('video', composePeripheralKey({ device, peripheralId }), frontEndVideoMessage, videoExpiration);
       }
     }
   }
@@ -167,6 +178,12 @@ class MQTTService {
       const message = this.getMessage(peripheralId);
       this.sendFn(message);
       await timer(500);
+    }
+  }
+
+  async disconnect() {
+    if (this.client) {
+      this.client.end();
     }
   }
 }
