@@ -1,0 +1,33 @@
+services:
+  wss-mqtt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NODE_VERSION=18
+    ports:
+      - "8080:${WSS_PORT}"
+      - "9229:9229"
+    environment:
+      - REDIS_URL=redis://keydb:6379
+    restart: always
+    depends_on:
+      keydb:
+        condition: service_healthy
+  keydb:
+    image: "eqalpha/keydb:arm64_v6.3.4"
+    platform: linux/arm64
+    healthcheck:
+      test: [ "CMD", "keydb-cli", "--raw", "incr", "ping" ]
+      interval: 5s
+      timeout: 10s
+      retries: 3
+    ports:
+      - "6379:6379"
+    restart: always
+    # in case you want to persist data test uncomment the following lines
+    # volumes:
+    #   - keydb-data:/data
+    # entrypoint: keydb-server --dir /data --save 15 1
+# volumes:
+#   keydb-data:

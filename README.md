@@ -6,15 +6,10 @@ To run the components locally, follow these steps:
 
 1. Clone the repository
 2. Navigate to the project directory
-3. Install dependencies:
-```bash
-   npm install
-   yarn
-```
+3. Set up `.env` file and forward MQTT service port following [instruction](https://www.notion.so/teknoir/Connect-a-service-in-the-cloud-with-local-development-environment-dff3f37176604d56ac7c7e06f30c9d95)
 4. Run the development server:
 ```bash
-   npm run dev
-   yarn dev
+   docker compose down && docker compose build --no-cache && docker compose up
 ```
 5. WebSocketServer will be available on  [ws://localhost:8080](ws://localhost:8080)
 
