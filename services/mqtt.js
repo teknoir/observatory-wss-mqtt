@@ -56,7 +56,13 @@ class MQTTService {
     // console.log('------MESSAGE MQTT----', topic);
     const messageStr = bufferMessage.toString();
     const message = JSON.parse(messageStr);
-    const { peripheral } = message;
+
+    if (typeof message !== 'object' || message === null) {
+      console.log(`Received bad format message from topic: ${topic}`);
+      return;
+    }
+
+    const peripheral = message.data?.peripheral || message.peripheral;
     
     const device = this.getDeviceFromTopic(topic);
     const peripheralId = peripheral?.id;
