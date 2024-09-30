@@ -1,17 +1,17 @@
-require('dotenv').config();
-const { createServer } = require('https');
-const { readFileSync } = require('fs');
-const { WebSocketServer } = require('ws');
+require("dotenv").config();
+const { createServer } = require("https");
+const { readFileSync } = require("fs");
+const { WebSocketServer } = require("ws");
 const { MQTTServiceClass } = require("./services/mqtt");
 const DeviceServiceClass = require("./services/device");
 const CacheServiceClass = require("./services/cache");
-const { TYPES, WsMessageService} = require("./services/wsMessage");
+const { TYPES, WsMessageService } = require("./services/wsMessage");
 const { getUniqueID } = require("./utils");
 
 const options = {
-  port: process.env.WSS_PORT
+  port: process.env.WSS_PORT,
   //port: 8080
-}
+};
 
 // Not needed due to Istio TLS termination
 // if (process.env.NODE_ENV !== 'development') {
@@ -30,7 +30,7 @@ const sendToSubscribers = (data) => {
   // console.log('sendToSubscribers')
   subscribers.forEach((subscriber) => {
     subscriber.send(dataStr);
-  })
+  });
 };
 
 const DeviceService = new DeviceServiceClass(sendToSubscribers);
@@ -45,10 +45,13 @@ const sendToSubscribersFromMqtt = (data) => {
 
 const CacheService = new CacheServiceClass();
 const MQTTService = new MQTTServiceClass();
-MQTTService.init(sendToSubscribersFromMqtt, CacheService.set.bind(CacheService));
+MQTTService.init(
+  sendToSubscribersFromMqtt,
+  CacheService.set.bind(CacheService),
+);
 
-wss.on('connection', function connection(ws) {
-  console.log('WS user connection opened');
+wss.on("connection", function connection(ws) {
+  console.log("WS user connection opened");
   ws.ID = getUniqueID();
   subscribers.set(ws.ID, ws);
 
@@ -59,37 +62,49 @@ wss.on('connection', function connection(ws) {
     });
   }
 
-  ws.on('error', function error(err) {
-    console.log('WS error', err);
+  ws.on("error", function error(err) {
+    console.log("WS error", err);
   });
 
-  ws.on('message', function message(dataRaw) {
+  ws.on("message", function message(dataRaw) {
     const data = JSON.parse(dataRaw);
-    const { device, peripheralId, duration } = data;
+    const { device, peripheralId, duration, maxFrameRate } = data;
 
     switch (data.type) {
       case TYPES.START_IMAGES_STREAM:
-        MQTTService.playFrontEndVideo({ device, peripheralId, duration });
+        MQTTService.playFrontEndVideo({
+          device,
+          peripheralId,
+          duration,
+          maxFrameRate,
+        });
         // TODO: use for testing next line
         // MQTTService.playFrontEndVideoTest({ peripheralId: data.peripheralId });
         break;
       case TYPES.START_RAW_IMAGES_STREAM:
-        MQTTService.playFrontEndRawVideo({ device, peripheralId, duration });
+        MQTTService.playFrontEndRawVideo({
+          device,
+          peripheralId,
+          duration,
+          maxFrameRate,
+        });
         break;
     }
   });
 
-  ws.on('close', function() {
-    console.log('connection closed');
+  ws.on("close", function () {
+    console.log("connection closed");
     subscribers.delete(ws.ID);
     if (subscribers.size === 0) {
       DeviceService.stopCheckActivity();
     }
   });
 
-  ws.send(JSON.stringify({
-    status: 'connected WSS-MQTT'
-  }));
+  ws.send(
+    JSON.stringify({
+      status: "connected WSS-MQTT",
+    }),
+  );
 });
 
 // ====================== TESTING ======================
