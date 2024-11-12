@@ -1,5 +1,6 @@
 services:
   wss-mqtt:
+    platform: linux/arm64
     build:
       context: .
       dockerfile: Dockerfile
@@ -8,6 +9,7 @@ services:
     ports:
       - "8080:${WSS_PORT}"
       - "9229:9229"
+      - "30000-30003:30000-30003/udp"
     environment:
       - REDIS_URL=redis://keydb:6379
     restart: always

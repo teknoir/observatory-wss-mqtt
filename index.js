@@ -5,6 +5,9 @@ const DeviceServiceClass = require("./services/device");
 const CacheServiceClass = require("./services/cache");
 const { TYPES, WsMessageService} = require("./services/wsMessage");
 const { getUniqueID, decomposePeripheralKey } = require("./utils");
+const { acceptAnswer, createOffer } = require("./services/webRtc");
+
+let webRtcConnectionData;
 
 const options = {
   port: process.env.WSS_PORT || 8080,
@@ -13,6 +16,7 @@ const options = {
 const wss = new WebSocketServer(options);
 
 const subscribers = new Map();
+const dataChanellSubscribers = new Map();
 
 const filterStream = (subscriber, data) => {
   if (subscriber.device && subscriber.device != data?.device) {
@@ -24,6 +28,47 @@ const filterStream = (subscriber, data) => {
   }
 
   return false;
+};
+
+const sendToDataChanellSubscribers = (data) => {
+  const isStream = data?.type === TYPES.MESSAGE;
+  const dataStr = JSON.stringify(data);
+  const chunkSize = 15 * 1024; // 15KB
+  console.log('sendToDataChanellSubscribers', dataChanellSubscribers.size)
+
+  dataChanellSubscribers.forEach((subscriber) => {
+    if (subscriber.readyState !== 'open') { 
+      console.log('Data channel is not ready:', subscriber.readyState);
+      return;
+    }
+
+    if (subscriber.bufferedAmount > 0) { 
+      console.log('Data channel has buffered amount', subscriber.bufferedAmount);
+      return;
+    }
+
+    if (isStream && filterStream(subscriber, data)) {
+      return;
+    }
+
+    const chunkId = new Date().getTime();  // Unique ID for this message
+    const totalChunks = Math.ceil(dataStr.length / chunkSize);
+
+    for (let i = 0; i < totalChunks; i++) {
+      const chunk = dataStr.slice(i * chunkSize, (i + 1) * chunkSize);
+      const chunkMessage = JSON.stringify({
+        chunkId,
+        sequenceNumber: i,
+        totalChunks,
+        data: chunk
+      });
+      subscriber.send(chunkMessage);
+    }
+    console.log('Data channel message sent. Total chunks:', totalChunks);
+
+    // subscriber.send(dataStr);
+    // subscriber.send('Data stream');
+  });
 };
 
 const sendToSubscribers = (data) => {
@@ -41,7 +86,8 @@ const sendToSubscribers = (data) => {
 const DeviceService = new DeviceServiceClass(sendToSubscribers);
 
 const sendToSubscribersFromMqtt = (data) => {
-  sendToSubscribers(data);
+  // sendToSubscribers(data);
+  sendToDataChanellSubscribers(data);
   DeviceService.track(data);
   if (!DeviceService.isCheckActivity()) {
     DeviceService.startCheckActivity();
@@ -82,6 +128,24 @@ const sendCachedVideo = async (ws) => {
     }
     return new Promise(resolve => ws.send(JSON.stringify(message), resolve));
   }));
+};
+
+const initDataChanellSubscriber = (dc, ws) => {
+  dc.ID = ws.ID;
+
+  const device = ws.device;
+  const peripheral = ws.peripheral;
+
+  if (device) {
+    ws.device = device;
+  }
+
+  if (peripheral) {
+    ws.peripheral = peripheral;
+  }
+
+  console.log('initDataChanellSubscriber', ws.ID);
+  dataChanellSubscribers.set(ws.ID, dc);
 };
 
 const initSubscriber = (ws, incomingMessage) => {
@@ -129,6 +193,22 @@ wss.on('connection', function connection(ws, incomingMessage) {
     const { device, peripheralId, duration } = data;
 
     switch (data.type) {
+      case 'WebRTCRequest':
+        console.log('[WEBSocket] WebRTC message REQUEST received');
+        createOffer().then((data) => {
+          ws.send(JSON.stringify({ type: 'WebRTCOffer', offer: data.offer }));
+          console.log('[WEBSocket] WebRTC offer sent');
+          webRtcConnectionData = data;
+        });
+        break;
+      case 'WebRTCAnswer':
+        console.log('[WEBSocket] WebRTC ANSWER received');
+        acceptAnswer(data.answer, webRtcConnectionData.peerConnection).then(() => {
+          ws.send(JSON.stringify({ type: 'WebRTCAccepted' }));
+          console.log('[WEBSocket] WebRTC answer accepted sent');
+          initDataChanellSubscriber(webRtcConnectionData.dataChannel, ws);
+        });
+        break;
       case TYPES.START_IMAGES_STREAM:
         MQTTService.playFrontEndVideo({ device, peripheralId, duration });
         // TODO: use for testing next line
@@ -142,6 +222,9 @@ wss.on('connection', function connection(ws, incomingMessage) {
 
   ws.on('close', function() {
     console.log('connection closed');
+    webRtcConnectionData?.dataChannel.close();
+    webRtcConnectionData?.peerConnection.close();
+    webRtcConnectionData = null;
     subscribers.delete(ws.ID);
     if (subscribers.size === 0) {
       DeviceService.stopCheckActivity();
