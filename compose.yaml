@@ -1,5 +1,7 @@
 services:
   wss-mqtt:
+    cap_add:
+      - NET_ADMIN
     build:
       context: .
       dockerfile: Dockerfile

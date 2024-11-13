@@ -67,16 +67,16 @@ class MQTTService {
     const device = this.getDeviceFromTopic(topic);
     const peripheralId = peripheral?.id;
     // caching key if not exists to collect statistics for each device and peripheral
-    if (device && peripheralId) {
-      this.setCacheFn('stat', composePeripheralKey({ device, peripheralId }), { info: peripheral }, statExpiration);
-    }
+    // if (device && peripheralId) {
+    //   this.setCacheFn('stat', composePeripheralKey({ device, peripheralId }), { info: peripheral }, statExpiration);
+    // }
 
     if (this.sendFn && this.isFrontEndVideoTopic(message?.topic)) {
       const frontEndVideoMessage = WsMessageService.getFrontEndVideo(device, message)
       this.sendFn(frontEndVideoMessage);
-      if (device && peripheralId) {
-        this.setCacheFn('video', composePeripheralKey({ device, peripheralId }), frontEndVideoMessage, videoExpiration);
-      }
+      // if (device && peripheralId) {
+      //   this.setCacheFn('video', composePeripheralKey({ device, peripheralId }), frontEndVideoMessage, videoExpiration);
+      // }
     }
   }
 

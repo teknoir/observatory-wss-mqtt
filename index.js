@@ -26,15 +26,58 @@ const filterStream = (subscriber, data) => {
   return false;
 };
 
+const peripheralLastMessage = new Map();
+const peripheralLastTimestamp = new Map();
+
 const sendToSubscribers = (data) => {
   const isStream = data?.type === TYPES.MESSAGE;
+  const peripheralId = data?.data?.peripheral?.id;
+  if (!peripheralId) {
+    console.log('skip due to no peripheralId');
+    return;
+  }
+
+  const s = Array.from(peripheralLastMessage.entries()).sort((a, b) => a[1] - b[1]);
+
+  if (s.length > 1 && peripheralLastMessage.has(peripheralId) && s[0][0] != peripheralId) {
+    console.log('[LOW PRIO] skip due to low priority', peripheralId, s[0][0]);
+    return;
+  }
+
+
   const dataStr = JSON.stringify(data);
+
   // console.log('sendToSubscribers')
   subscribers.forEach((subscriber) => {
     if (isStream && filterStream(subscriber, data)) {
       return;
     }
+    if (subscriber.bufferedAmount > 0) {
+      console.log('*BUFFER FULL* - skip sending to subscriber', subscriber.ID);
+      return;
+    }
+
+    const lastFrameDate = s.length > 0 ? new Date(s[0][1]) : undefined;
+    const currentDate = new Date();
+    const realTimeDiff = lastFrameDate ? currentDate.getTime() - lastFrameDate.getTime() : 0;
+
+    const lastTimestamp = peripheralLastTimestamp.get(peripheralId) || 0;
+    const lastTimestampDate = lastTimestamp && new Date(lastTimestamp);
+    const currentTimestamp = data.metadata.timestamp && new Date(data.metadata.timestamp);
+    const frameDiff = lastTimestamp && lastTimestampDate ? currentTimestamp.getTime() - lastTimestampDate.getTime() : 0;
+
+    console.log('SENDING to subscribers', peripheralId,
+      'curr timestmp = ', data.metadata.timestamp,
+      '| prev tstmp = ', lastTimestampDate,
+      '| diff = ', realTimeDiff,
+      '| current date = ', currentDate.toISOString(),
+      '| prev date = ', lastFrameDate?.toISOString(),
+      '| frame diff = ', frameDiff,
+    );
     subscriber.send(dataStr);
+
+    peripheralLastMessage.set(peripheralId, currentDate.getTime());
+    peripheralLastTimestamp.set(peripheralId, data.metadata.timestamp);
   });
 };
 
