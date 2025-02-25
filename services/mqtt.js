@@ -8,7 +8,7 @@ const MQTT_PORT = process.env.MQTT_PORT;
 const MQTT_USER = process.env.MQTT_USER;
 const MQTT_PASS = process.env.MQTT_PASS;
 const brokerUrl = `mqtt://${MQTT_HOST}:${MQTT_PORT}`;
-const TOPIC = `/devices/+/events`;
+const TOPIC = `/devices/+/events/inference`;
 const TOPIC_VIDEO = 'front-end-video';
 const RAW_TOPIC_VIDEO = 'raw-front-end-video';
 const TOPIC_ALERT = 'front-end-alert';
@@ -105,11 +105,11 @@ class MQTTService {
   }
 
   getDeviceFromTopic(topic) {
-    const res = topic.match(/\/devices\/(?<device>.+)\/events/);
+    const res = topic.match(/\/devices\/(?<device>.+)\/events\/inference/);
     return res?.[1];
   }
 
-  getTopicPlayVideo = device => `/devices/${device}/commands/devstudio`;
+  getTopicPlayVideo = device => `/devices/${device}/commands/framerates`;
 
   // TODO: All lines below for testing purposes, they might be removed in future
   runNotificationsTest() {
