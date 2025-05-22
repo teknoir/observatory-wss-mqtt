@@ -1,7 +1,7 @@
 const CacheService = require('./cache');
 const logger = require('./logger');
 
-const FLUSH_CACHE_BUFFER_INTERVAL = process.env.FLUSH_CACHE_BUFFER_INTERVAL || 30000; // 30 seconds
+const FLUSH_CACHE_BUFFER_INTERVAL = Number(process.env.FLUSH_CACHE_BUFFER_INTERVAL) || 30000; // 30 seconds
 
 class BufferedCacheService extends CacheService {
   constructor() {
