@@ -1,12 +1,12 @@
-const { createClient } = require('redis');
 const CacheService = require('./cache');
 const logger = require('./logger');
+
+const FLUSH_CACHE_BUFFER_INTERVAL = process.env.FLUSH_CACHE_BUFFER_INTERVAL || 30000; // 30 seconds
 
 class BufferedCacheService extends CacheService {
   constructor() {
     super();
     this.buffer = {};
-    this.timeToFlush = 30 * 1000; // 30 seconds
   }
 
   async init() {
@@ -18,7 +18,7 @@ class BufferedCacheService extends CacheService {
       this.flushBuffer().catch(err => {
         console.error('Error flushing buffer:', err);
       });
-    }, this.timeToFlush);
+    }, FLUSH_CACHE_BUFFER_INTERVAL);
   }
 
   async flushBuffer() {
