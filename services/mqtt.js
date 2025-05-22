@@ -2,13 +2,14 @@ const mqtt = require("mqtt");
 const { timer, getUniqueID, composePeripheralKey } = require('../utils');
 const { WsMessageService } = require('./wsMessage');
 const { MqttMessageService } = require("./mqttMessage");
+const log = require('./logger');
 
 const MQTT_HOST = process.env.MQTT_HOST;
 const MQTT_PORT = process.env.MQTT_PORT;
 const MQTT_USER = process.env.MQTT_USER;
 const MQTT_PASS = process.env.MQTT_PASS;
 const brokerUrl = `mqtt://${MQTT_HOST}:${MQTT_PORT}`;
-const TOPIC = `/devices/+/events/inference`;
+const TOPIC = process.env.MQTT_IN_0 || `/devices/+/events/inference`;
 const TOPIC_VIDEO = 'front-end-video';
 const RAW_TOPIC_VIDEO = 'raw-front-end-video';
 const TOPIC_ALERT = 'front-end-alert';
@@ -29,36 +30,36 @@ class MQTTService {
     try {
       this.sendFn = sendFn;
       this.setCacheFn = setCacheFn;
-      console.log('Connecting to MQTT', brokerUrl);
+      log.info('Connecting to MQTT', { brokerUrl });
       this.client = mqtt.connect(brokerUrl, {
         username: MQTT_USER,
         password: MQTT_PASS
       });
       this.client.on("connect", () => {
-        console.log('MQTT connected');
+        log.info('MQTT connected');
         this.subscribe(TOPIC);
       });
       this.client.on("message", this.onMessage.bind(this));
     } catch (e) {
-      console.log('MQTT error', e);
+      log.error('MQTT error', { error: e });
     }
   }
 
   subscribe(topic) {
     this.client.subscribe(topic, (err) => {
       if (err) {
-        console.log('err', err)
+        log.error('err', { error: err })
       }
     });
   }
 
   onMessage(topic, bufferMessage) {
-    // console.log('------MESSAGE MQTT----', topic);
+    log.debug('------MESSAGE MQTT----', { topic });
     const messageStr = bufferMessage.toString();
     const message = JSON.parse(messageStr);
 
     if (typeof message !== 'object' || message === null) {
-      console.log(`Received bad format message from topic: ${topic}`);
+      log.warn(`Received bad format message from topic: ${topic}`);
       return;
     }
 
@@ -72,6 +73,7 @@ class MQTTService {
     }
 
     if (this.sendFn && this.isFrontEndVideoTopic(message?.topic)) {
+      log.debug('Video message from topic:', { topic });
       const frontEndVideoMessage = WsMessageService.getFrontEndVideo(device, message)
       this.sendFn(frontEndVideoMessage);
       if (device && peripheralId) {
@@ -166,7 +168,7 @@ class MQTTService {
 
   async test() {
     for (let i = 0; i < this.maxDevicesTest; i++) {
-      console.log('---PUBLISH---', i);
+      log.info('---PUBLISH---', { i });
       const message = this.getMessage(i + 1);
       this.sendFn(message);
       await timer(10000);

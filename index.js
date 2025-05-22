@@ -2,10 +2,11 @@ require('dotenv').config();
 const { WebSocketServer } = require('ws');
 const { MQTTServiceClass } = require("./services/mqtt");
 const DeviceServiceClass = require("./services/device");
-const CacheServiceClass = require("./services/cache");
+const CacheServiceClass = require("./services/bufferedCache");
 const { TYPES, WsMessageService} = require("./services/wsMessage");
 const { getUniqueID, decomposePeripheralKey } = require("./utils");
-
+const log = require('./services/logger');
+ 
 const options = {
   port: process.env.WSS_PORT || 8080,
 }
@@ -14,24 +15,24 @@ const wss = new WebSocketServer(options);
 
 const subscribers = new Map();
 
-const filterStream = (subscriber, data) => {
+const isSubscribedToData = (subscriber, data) => {
   if (subscriber.device && subscriber.device != data?.device) {
-    return true;
+    return false;
   }
 
   if (subscriber.peripheral && subscriber.peripheral != data?.peripheral?.id) {
-    return true;
+    return false;
   }
 
-  return false;
+  return true;
 };
 
 const sendToSubscribers = (data) => {
   const isStream = data?.type === TYPES.MESSAGE;
   const dataStr = JSON.stringify(data);
-  // console.log('sendToSubscribers')
+  log.debug('sendToSubscribers')
   subscribers.forEach((subscriber) => {
-    if (isStream && filterStream(subscriber, data)) {
+    if (isStream && !isSubscribedToData(subscriber, data)) {
       return;
     }
     subscriber.send(dataStr);
@@ -77,7 +78,7 @@ const sendCachedVideo = async (ws) => {
   }
 
   await Promise.all(await CacheService.forEachEntry('video', (_, message) => {
-    if (filterStream(ws, message)) {
+    if (!isSubscribedToData(ws, message)) {
       return Promise.resolve();
     }
     return new Promise(resolve => ws.send(JSON.stringify(message), resolve));
@@ -112,7 +113,7 @@ const MQTTService = new MQTTServiceClass();
 MQTTService.init(sendToSubscribersFromMqtt, CacheService.set.bind(CacheService));
 
 wss.on('connection', function connection(ws, incomingMessage) {
-  console.log(`WS user connection opened url = ${incomingMessage.url}`);
+  log.info(`WS user connection opened url = ${incomingMessage.url}`);
 
   initSubscriber(ws, incomingMessage);
   // Send cache stat to new client
@@ -121,7 +122,7 @@ wss.on('connection', function connection(ws, incomingMessage) {
   sendCachedVideo(ws);
 
   ws.on('error', function error(err) {
-    console.log('WS error', err);
+    log.error('WS error', err);
   });
 
   ws.on('message', function message(dataRaw) {
@@ -141,7 +142,7 @@ wss.on('connection', function connection(ws, incomingMessage) {
   });
 
   ws.on('close', function() {
-    console.log('connection closed');
+    log.info('connection closed');
     subscribers.delete(ws.ID);
     if (subscribers.size === 0) {
       DeviceService.stopCheckActivity();
