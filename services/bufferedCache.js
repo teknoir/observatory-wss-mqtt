@@ -16,7 +16,7 @@ class BufferedCacheService extends CacheService {
 
     setInterval(() => {
       this.flushBuffer().catch(err => {
-        console.error('Error flushing buffer:', err);
+        logger.error('Error flushing buffer', { error: err });
       });
     }, FLUSH_CACHE_BUFFER_INTERVAL);
   }
