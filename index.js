@@ -90,6 +90,7 @@ const sendCacheStat = async (ws) => {
 
 const sendCachedVideo = async (ws) => {
   if (ws.skipStream) {
+    log.debug('skip stream set - not sending cached video', { id: ws.ID });
     return;
   }
 
