@@ -30,13 +30,29 @@ const isSubscribedToData = (subscriber, data) => {
 const sendToSubscribers = (data) => {
   const isStream = data?.type === TYPES.MESSAGE;
   const dataStr = JSON.stringify(data);
-  log.debug('sendToSubscribers')
-  subscribers.forEach((subscriber) => {
+
+  log.debug('sendToSubscribers', { subscribers: subscribers?.size });
+
+  for (const [id, subscriber] of subscribers.entries()) {
+    if (subscriber.readyState === subscriber.CONNECTING) {
+      // Skip connecting sockets
+      log.debug('subscriber is connecting - skip', { id });
+      continue;
+    }
+
+    if (subscriber.readyState !== subscriber.OPEN) {
+      // Remove dead socket
+      subscribers.delete(id);
+      log.warn('subscriber is not open - removed', { id });
+      continue;
+    }
+
     if (isStream && !isSubscribedToData(subscriber, data)) {
       return;
     }
+
     subscriber.send(dataStr);
-  });
+  }
 };
 
 const DeviceService = new DeviceServiceClass(sendToSubscribers);
@@ -88,6 +104,8 @@ const sendCachedVideo = async (ws) => {
 const initSubscriber = (ws, incomingMessage) => {
   ws.ID = getUniqueID();
 
+  log.info('initSubscriber', { id: ws.ID });
+
   const u = new URL(incomingMessage.url || '/', 'http://localhost');
   const device = u.searchParams.get('device');
   const peripheral = u.searchParams.get('peripheral');
@@ -119,16 +137,17 @@ wss.on('connection', function connection(ws, incomingMessage) {
   log.info(`WS user connection opened url = ${incomingMessage.url}`);
 
   initSubscriber(ws, incomingMessage);
+
+  ws.on('error', function error(err) {
+    log.error('WS error', { error: err });
+  });
+
   // Send cache stat to new client
   sendCacheStat(ws);
   // Send to client existing images from the CacheService
   sendCachedVideo(ws);
 
-  ws.on('error', function error(err) {
-    log.error('WS error', err);
-  });
-
-  ws.on("message", function message(dataRaw) {
+  ws.on('message', function message(dataRaw) {
     const data = JSON.parse(dataRaw);
     const { device, peripheralId, duration, maxFrameRate } = data;
 
@@ -155,7 +174,7 @@ wss.on('connection', function connection(ws, incomingMessage) {
   });
 
   ws.on('close', function() {
-    log.info('connection closed');
+    log.info('connection closed', { id: ws.ID });
     subscribers.delete(ws.ID);
     if (subscribers.size === 0) {
       DeviceService.stopCheckActivity();
