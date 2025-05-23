@@ -40,7 +40,7 @@ const sendToSubscribers = (data) => {
       continue;
     }
 
-    if (subscriber.readyState !== subscriber.OPEN) {
+    if (subscriber.readyState !== WebSocket.OPEN) {
       // Remove dead socket
       subscribers.delete(id);
       log.warn('subscriber is not open - removed', { id });
