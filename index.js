@@ -34,14 +34,14 @@ const sendToSubscribers = (data) => {
   log.debug('sendToSubscribers', { subscribers: subscribers?.size });
 
   for (const [id, subscriber] of subscribers.entries()) {
-    if (subscriber.readyState === WebSocket.CONNECTING) {
+    if (subscriber.readyState === 0) { // 0 = CONNECTING
       // Skip connecting sockets
       log.debug('subscriber is connecting - skip', { id });
       continue;
     }
 
-    if (subscriber.readyState !== WebSocket.OPEN) {
-      // Remove dead socket
+    if (subscriber.readyState !== 1) { // 1 = OPEN
+      // Remove dead socket - CLOSING or CLOSED states
       subscribers.delete(id);
       log.warn('subscriber is not open - removed', { id });
       continue;
@@ -99,7 +99,10 @@ const sendCachedVideo = async (ws) => {
       log.debug('skip stream - not subscribed', { id: ws.ID, device: ws.device, peripheral: ws.peripheral });
       return Promise.resolve();
     }
-    return new Promise(resolve => ws.send(JSON.stringify(message), resolve));
+    return new Promise(resolve => {
+      log.debug('send cached video', { id: ws.ID });
+      ws.send(JSON.stringify(message), resolve);
+    });
   }));
 };
 

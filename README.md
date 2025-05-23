@@ -30,7 +30,7 @@ gcloud --project=teknoir-mgmt builds submit . \
 --config=cloudbuild.yaml \
 --timeout=3600 \
 --substitutions=\
-SHORT_SHA="test",\
+SHORT_SHA="$(date +%Y%m%d-%H%M%S)",\
 BRANCH_NAME="dev"
 ```
 
