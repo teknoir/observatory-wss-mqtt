@@ -96,6 +96,7 @@ const sendCachedVideo = async (ws) => {
 
   await Promise.all(await CacheService.forEachEntry('video', (_, message) => {
     if (!isSubscribedToData(ws, message)) {
+      log.debug('skip stream - not subscribed', { id: ws.ID, device: ws.device, peripheral: ws.peripheral });
       return Promise.resolve();
     }
     return new Promise(resolve => ws.send(JSON.stringify(message), resolve));
