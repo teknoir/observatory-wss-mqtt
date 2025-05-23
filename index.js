@@ -34,7 +34,7 @@ const sendToSubscribers = (data) => {
   log.debug('sendToSubscribers', { subscribers: subscribers?.size });
 
   for (const [id, subscriber] of subscribers.entries()) {
-    if (subscriber.readyState === subscriber.CONNECTING) {
+    if (subscriber.readyState === WebSocket.CONNECTING) {
       // Skip connecting sockets
       log.debug('subscriber is connecting - skip', { id });
       continue;
