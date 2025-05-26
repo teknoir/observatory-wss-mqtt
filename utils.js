@@ -10,7 +10,7 @@ const timer = ms => new Promise(res => setTimeout(res, ms))
 
 function composePeripheralKey(data) {
   const device = data?.device ?? '';
-  const peripheralId = data?.peripheralId ?? '';
+  const peripheralId = (data?.data?.peripheral?.id || data?.peripheralId) ?? '';
   return JSON.stringify({ device, peripheralId });
 }
 

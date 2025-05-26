@@ -4,14 +4,19 @@ const { MQTTServiceClass } = require("./services/mqtt");
 const DeviceServiceClass = require("./services/device");
 const CacheServiceClass = require("./services/bufferedCache");
 const { TYPES, WsMessageService} = require("./services/wsMessage");
-const { getUniqueID, decomposePeripheralKey } = require("./utils");
+const { getUniqueID, composePeripheralKey } = require("./utils");
 const log = require('./services/logger');
+const SchedulerClass = require('./services/messageScheduler');
+const MessageCollectorClass = require('./services/messageCollector');
  
 const options = {
   port: process.env.WSS_PORT || 8080,
+  perMessageDeflate: true,
 }
 
 const wss = new WebSocketServer(options);
+
+const messageCollector = new MessageCollectorClass();
 
 const subscribers = new Map();
 
@@ -58,7 +63,8 @@ const sendToSubscribers = (data) => {
 const DeviceService = new DeviceServiceClass(sendToSubscribers);
 
 const sendToSubscribersFromMqtt = (data) => {
-  sendToSubscribers(data);
+  // sendToSubscribers(data);
+  messageCollector.addMessage(data);
   DeviceService.track(data);
   if (!DeviceService.isCheckActivity()) {
     DeviceService.startCheckActivity();
@@ -124,6 +130,33 @@ const initSubscriber = (ws, incomingMessage) => {
     ws.peripheral = peripheral;
   }
 
+  ws.scheduler = new SchedulerClass(
+    ws.ID,
+    (key, message) => {
+      if (ws.readyState === 0) {
+        log.debug('subscriber is connecting - skip', { id: ws.ID });
+        return;
+      }
+      if (ws.readyState !== 1) {
+        log.warn('subscriber is not open - removed', { id: ws.ID });
+        ws.scheduler.stop();
+        subscribers.delete(ws.ID);
+        return;
+      }
+      if (ws.skipStream) {
+        log.debug('skip stream set - not sending cached video', { id: ws.ID });
+        return;
+      }
+      if (!isSubscribedToData(ws, message)) {
+        log.debug('skip stream - not subscribed', { id: ws.ID, device: ws.device, peripheral: ws.peripheral });
+        return;
+      }
+      log.debug('send video', { id: ws.ID, bufferedAmount: ws.bufferedAmount });
+      ws.send(JSON.stringify(message));
+    },
+    messageCollector,
+  );
+
   ws.skipStream = !!skipStream;
   if (!skipStream) {
     subscribers.set(ws.ID, ws);
@@ -164,6 +197,10 @@ wss.on('connection', function connection(ws, incomingMessage) {
           duration,
           maxFrameRate,
         });
+        ws.scheduler.setKeyInterval(
+          composePeripheralKey({ device, peripheralId }),
+          1000 / (maxFrameRate || 1),
+        );
         // TODO: use for testing next line
         // MQTTService.playFrontEndVideoTest({ peripheralId: data.peripheralId });
         break;
@@ -180,6 +217,7 @@ wss.on('connection', function connection(ws, incomingMessage) {
 
   ws.on('close', function() {
     log.info('connection closed', { id: ws.ID });
+    ws.scheduler.stop();
     subscribers.delete(ws.ID);
     if (subscribers.size === 0) {
       DeviceService.stopCheckActivity();
