@@ -12,6 +12,7 @@ const TOPIC = `/devices/+/events`;
 const TOPIC_VIDEO = 'front-end-video';
 const RAW_TOPIC_VIDEO = 'raw-front-end-video';
 const TOPIC_ALERT = 'front-end-alert';
+const TOPIC_USER_PLATFORM_ALERT = 'user-platform-alert';
 
 class MQTTService {
   constructor() {
@@ -32,6 +33,7 @@ class MQTTService {
       });
       this.client.on("connect", () => {
         this.subscribe(TOPIC);
+        this.subscribe(TOPIC_USER_PLATFORM_ALERT);
       })
       this.client.on("message", this.onMessage.bind(this));
     } catch (e) {
@@ -52,6 +54,13 @@ class MQTTService {
     const messageStr = bufferMessage.toString();
     const message = JSON.parse(messageStr);
     const { peripheral } = message;
+    
+    if (this.sendFn && (message?.topic === TOPIC_ALERT || message?.topic === TOPIC_USER_PLATFORM_ALERT)) {
+      const alertMessage = WsMessageService.getFrontEndAlert(message);
+      this.sendFn(alertMessage);
+      return;
+    }
+    
     if (this.sendFn && this.isFrontEndVideoTopic(message?.topic)) {
       const device = this.getDeviceFromTopic(topic);
       const peripheralId = peripheral?.id;
@@ -114,6 +123,7 @@ class MQTTService {
       topic: TOPIC_ALERT,
       event: {
         detection_id: detectionId,
+        type: 'test_alert',
         peripheral_id: peripheralId,
         peripheral_name: peripheralId,
         start_time: startDate.toISOString(),
