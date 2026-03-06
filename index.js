@@ -10,6 +10,7 @@ const SchedulerClass = require('./services/messageScheduler');
 const MessageCollectorClass = require('./services/messageCollector');
  
 const options = {
+  host: "0.0.0.0",
   port: process.env.WSS_PORT || 8080,
   perMessageDeflate: true,
 }
