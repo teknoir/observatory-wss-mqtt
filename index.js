@@ -12,7 +12,7 @@ const MessageCollectorClass = require('./services/messageCollector');
 const options = {
   host: "0.0.0.0",
   port: process.env.WSS_PORT || 8080,
-  perMessageDeflate: true,
+  perMessageDeflate: false,
 }
 
 const wss = new WebSocketServer(options);
@@ -48,13 +48,14 @@ const sendToSubscribers = (data) => {
 
     if (subscriber.readyState !== 1) { // 1 = OPEN
       // Remove dead socket - CLOSING or CLOSED states
+      subscriber.scheduler?.stop();
       subscribers.delete(id);
       log.warn('subscriber is not open - removed', { id });
       continue;
     }
 
     if (isStream && !isSubscribedToData(subscriber, data)) {
-      return;
+      continue;
     }
 
     subscriber.send(dataStr);

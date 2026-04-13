@@ -44,7 +44,11 @@ class BufferedCacheService extends CacheService {
     }
 
     this.buffer = {};
-    await multi.exec();
+    try {
+      await multi.exec();
+    } catch (err) {
+      logger.error('Failed to execute redis multi command', { error: err });
+    }
   }
 
   async set(set, key, value, expiration = 60 * 60 * 24) {
