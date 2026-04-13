@@ -20,11 +20,9 @@ safeImageTag() {
 export BRANCH_NAME=${BRANCH_NAME:-"dev"}
 export SHORT_SHA=${SHORT_SHA:-$(date +%Y%m%d-%H%M%S)}
 export SAFE_TAG=$(safeImageTag "${SHORT_SHA}")
-export NODE_VERSION="22"
 export NAMESPACE=gcr.io
 
 docker buildx build . \
   --platform=linux/amd64 \
   --push \
-  --build-arg NODE_VERSION=$NODE_VERSION \
   --tag us-docker.pkg.dev/teknoir/$NAMESPACE/wss-mqtt:${BRANCH_NAME}-${SAFE_TAG}
