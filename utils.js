@@ -14,6 +14,28 @@ function composePeripheralKey(data) {
   return JSON.stringify({ device, peripheralId });
 }
 
+/**
+ * The camera a stream message belongs to. NVR frames carry it under `data.peripheral`, older apps at the top level.
+ */
+function peripheralIdOf(data) {
+  return data?.data?.peripheral?.id ?? data?.peripheral?.id;
+}
+
+/**
+ * Whether a socket opened with `?device=` and/or `?peripheral=` wants this stream message.
+ */
+function isSubscribedToData(subscriber, data) {
+  if (subscriber.device && subscriber.device != data?.device) {
+    return false;
+  }
+
+  if (subscriber.peripheral && subscriber.peripheral != peripheralIdOf(data)) {
+    return false;
+  }
+
+  return true;
+}
+
 function decomposePeripheralKey(key) {
   try {
     const { device, peripheralId } = JSON.parse(key);
@@ -28,5 +50,7 @@ module.exports = {
   getUniqueID,
   timer,
   composePeripheralKey,
-  decomposePeripheralKey 
+  decomposePeripheralKey,
+  isSubscribedToData,
+  peripheralIdOf,
 }

@@ -4,7 +4,7 @@ const { MQTTServiceClass } = require("./services/mqtt");
 const DeviceServiceClass = require("./services/device");
 const CacheServiceClass = require("./services/bufferedCache");
 const { TYPES, WsMessageService} = require("./services/wsMessage");
-const { getUniqueID, decomposePeripheralKey, composePeripheralKey } = require("./utils");
+const { getUniqueID, decomposePeripheralKey, composePeripheralKey, isSubscribedToData } = require("./utils");
 const log = require('./services/logger');
 const SchedulerClass = require('./services/messageScheduler');
 const MessageCollectorClass = require('./services/messageCollector');
@@ -20,18 +20,6 @@ const wss = new WebSocketServer(options);
 const messageCollector = new MessageCollectorClass();
 
 const subscribers = new Map();
-
-const isSubscribedToData = (subscriber, data) => {
-  if (subscriber.device && subscriber.device != data?.device) {
-    return false;
-  }
-
-  if (subscriber.peripheral && subscriber.peripheral != data?.peripheral?.id) {
-    return false;
-  }
-
-  return true;
-};
 
 const sendToSubscribers = (data) => {
   const isStream = data?.type === TYPES.MESSAGE;
