@@ -6,7 +6,7 @@
   "scripts": {
     "start": "NODE_ENV=production node index.js",
     "dev": "NODE_ENV=development nodemon index.js",
-    "test": "node --test"
+    "test": "bash scripts/test.sh"
   },
   "repository": {
     "type": "git",

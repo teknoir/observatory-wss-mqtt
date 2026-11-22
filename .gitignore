@@ -128,3 +128,6 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Full test logs (scripts/test.sh under a coding agent)
+.test-logs/
